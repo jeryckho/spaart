@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="300pt"
+   height="300pt"
+   viewBox="0 0 1 1"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="spa-art.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.74564394"
+     inkscape:cx="266.88341"
+     inkscape:cy="240.06096"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="1072"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1025">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1021" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop1023" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1017">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1013" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop1015" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1017"
+       id="linearGradient1019"
+       x1="-0.56282537"
+       y1="0.30971383"
+       x2="-0.14112721"
+       y2="0.30971383"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-0.14802696)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1025"
+       id="linearGradient1027"
+       x1="0.21197401"
+       y1="0.20577874"
+       x2="0.49397401"
+       y2="0.20577874"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(0.14702599)" />
+  </defs>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g1035"
+       transform="translate(0,0.24225266)">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:0.1px;line-height:1.25;font-family:sans-serif;fill:url(#linearGradient1027);fill-opacity:1;stroke:none;stroke-width:0.0025"
+         x="0.35390002"
+         y="0.24147874"
+         id="text236"><tspan
+           sodipodi:role="line"
+           id="tspan234"
+           style="fill:url(#linearGradient1027);fill-opacity:1;stroke-width:0.0025"
+           x="0.35390002"
+           y="0.24147874">SPA<tspan
+   style="fill:url(#linearGradient1027);fill-opacity:1"
+   id="tspan432">CE</tspan></tspan><tspan
+           sodipodi:role="line"
+           style="fill:url(#linearGradient1027);fill-opacity:1;stroke-width:0.0025"
+           x="0.35390002"
+           y="0.36647874"
+           id="tspan288" /></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:0.0999996px;line-height:1.25;font-family:sans-serif;fill:url(#linearGradient1019);fill-opacity:1;stroke:none;stroke-width:0.00249999"
+         x="-0.71185231"
+         y="0.34541368"
+         id="text236-1"
+         transform="scale(-0.99999351,1.0000065)"><tspan
+           sodipodi:role="line"
+           style="fill:url(#linearGradient1019);fill-opacity:1;stroke-width:0.00249999"
+           x="-0.71185231"
+           y="0.34541368"
+           id="tspan288-9">TRADERS</tspan></text>
+    </g>
+  </g>
+</svg>

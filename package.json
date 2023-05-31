@@ -1,0 +1,32 @@
+{
+  "name": "spa-art",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "send": "copy .\\src-tauri\\target\\release\\spa_art.exe C:\\Users\\jerome.chery\\Dropbox\\Jey\\Sparta\\",
+    "make-api": "openapi-typescript \"https://stoplight.io/api/v1/projects/spacetraders/spacetraders/nodes/reference/SpaceTraders.json?fromExportButton=true&snapshotType=http_service\" --output src/lib/spacetraders.ts",
+    "make-api:bundle": "openapi-typescript \"https://stoplight.io/api/v1/projects/spacetraders/spacetraders/nodes/reference/SpaceTraders.json?fromExportButton=true&snapshotType=http_service&deref=optimizedBundle\" --output src/lib/spacetraders.ts"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.3.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^2.0.0",
+    "@tauri-apps/cli": "^1.3.0",
+    "bulma": "^0.9.4",
+    "font-awesome": "^4.7.0",
+    "immer": "^10.0.2",
+    "openapi-typescript": "^6.2.5",
+    "superagent": "^8.0.9",
+    "svelte": "^3.54.0",
+    "svelte-copy": "^1.3.2",
+    "vite": "^4.2.1"
+  }
+}
