@@ -308,6 +308,20 @@ export const getCargoShip = (data) => {
 }
 
 /**
+ * Purchase Cargo
+ * @param {{shipSymbol: string, token: string, symbol: string, units: number, }} data 
+ * @returns {Promise<{body:{data:{agent:Agent, cargo:Cargo, transaction:Transaction}}}>}
+ */
+export const purchaseCargo = (data) => {
+	const { token, path, body } = splitObject(data, { pathElems: ['shipSymbol'] });
+	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/purchase", path))
+		.use(throttle.plugin(undefined))
+		.auth(token, { type: "bearer" })
+		.send(body)
+		.accept('json');
+}
+
+/**
  * Negotiate Contract
  * @param {{shipSymbol: string, token: string}} data 
  * @returns {Promise<{body:{data:{contract:Contract}}}>}

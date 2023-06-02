@@ -1,14 +1,14 @@
 <script>
-  import ContractShips from './ContractShips.svelte';
-
-  import MainShip from './MainShip.svelte';
-
-  import PanelTabItem from '../PanelTabItem.svelte';
+	import ContractShips from './ContractShips.svelte';
+	import MainShip from './MainShip.svelte';
+	import Market from '../systems/Market.svelte';
+	import PanelTabItem from '../PanelTabItem.svelte';
+	import Show from '../Show.svelte';
 
 	import { token } from "../../stores/store";
 	import { ships, shipsSet } from "../../stores/ships";
+
 	import { getShip } from "../../lib/api";
-   import Show from '../Show.svelte';
 
 	export let symbol;
 	let ship;
@@ -60,9 +60,12 @@
 </div>
 
 <div class:is-hidden={subMenu !== "Market"}>
-	<div class="panel-block">
-		Market
-	</div>
+	<Market
+		shipSymbol={symbol}
+		systemSymbol={ship.nav.systemSymbol}
+		waypointSymbol={ship.nav.waypointSymbol}
+		showTitle={false}
+	/>
 </div>
 
 <div class:is-hidden={subMenu !== "Contracts"}>

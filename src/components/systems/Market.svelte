@@ -1,11 +1,16 @@
 <script>
-	import { getMarket } from "../../lib/api";
+  import BuySell from './BuySell.svelte';
 
-	import { token, keepers } from "../../stores/store";
+	import { getMarket, sellShip, purchaseCargo } from "../../lib/api";
+
+	import { ships, shipsSet } from "../../stores/ships";
+	import { token, keepers, agent } from "../../stores/store";
 	import { waypoints, waypointsMod } from "../../stores/waypoints";
 
 	export let systemSymbol;
 	export let waypointSymbol;
+	export let shipSymbol = undefined;
+	export let showTitle = true;
 
 	let err;
 
@@ -23,6 +28,35 @@
 		}
 	};
 
+	const onSell = async (data) => {
+		try {
+			const done = await sellShip({
+				...data,
+				shipSymbol: Ship.symbol,
+				token: $token,
+			});
+			$ships = shipsSet($ships, Ship.symbol, { cargo: done?.body?.data?.cargo });
+			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
+		} catch (error) {
+			err = error?.response?.body;
+		}
+	};
+
+	const onBuy = async (data) => {
+		try {
+			const done = await purchaseCargo({
+				...data,
+				shipSymbol: Ship.symbol,
+				token: $token,
+			});
+			$ships = shipsSet($ships, Ship.symbol, { cargo: done?.body?.data?.cargo });
+			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
+		} catch (error) {
+			err = error?.response?.body;
+		}
+	};
+
+
 	$: Waypoint = $waypoints?.[waypointSymbol];
 	$: Market = Waypoint?.market;
 	$: TradeGoods = Market?.tradeGoods ?? [];
@@ -31,22 +65,25 @@
 	$: Exports = Market?.exports.map((i) => i.symbol) ?? [];
 	$: Exchange = Market?.exchange.map((i) => i.symbol) ?? [];
 	$: All = Array.from(new Set([...Imports, ...Exports, ...Exchange])).sort((a, b) => a > b ? 1 : -1);
+	$: Ship = $ships.find((current) => current.symbol === shipSymbol);
 </script>
 
 <div class="panel">
-	<div class="panel-heading">
-		Market &nbsp;
-		<button
-			class="button is-small is-rounded"
-			on:click={() => {
-				onMarket({ systemSymbol, waypointSymbol });
-			}}
-		>
-			<span class="icon is-small">
-				<i class="fa fa-refresh" />
-			</span>
-		</button>
-	</div>
+	{#if showTitle}
+		<div class="panel-heading">
+			Market &nbsp;
+			<button
+				class="button is-small is-rounded"
+				on:click={() => {
+					onMarket({ systemSymbol, waypointSymbol });
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa fa-refresh" />
+				</span>
+			</button>
+		</div>
+	{/if}
 	{#if Market}
 		{#if SortedGoods.length}
 			<div class="panel-block">
@@ -80,22 +117,34 @@
 								{/if}
 							</td>
 							<td>{symbol}</td>
+							{#if Ship && Ship.nav.status === "DOCKED"}
+								<td>
+									{#each Ship.cargo.inventory.filter(i=>i.symbol===symbol) as Cargo}
+										<BuySell type="Sell" max={Cargo.units} value={Cargo.units} on:click={(e)=> onSell({symbol, units:e.detail})}/>
+									{/each}
+								</td>
+							{/if}
 							<td>
 								{#if (Imports.includes(symbol) || Exchange.includes(symbol))}
 									<span class="icon">
 										<i class="fa fa-sign-in" />
-									</span> &nbsp; {sellPrice}
-								{/if}
+									</span>
+								{/if} &nbsp; {sellPrice}
 							</td>
 							<td>{tradeVolume}</td>
 							<td>
 								{#if (Exports.includes(symbol) || Exchange.includes(symbol))}
 									<span class="icon">
 										<i class="fa fa-sign-out" />
-									</span> &nbsp; {purchasePrice}
-								{/if}
+									</span>
+								{/if} &nbsp; {purchasePrice}
+							</td>
+							{#if Ship && Ship.nav.status === "DOCKED"}
+								<td>
+									<BuySell type="Buy" max={tradeVolume} on:click={(e)=> onBuy({symbol, units:e.detail})}/>
+								</td>
+							{/if}
 						</tr>
-						
 						{/each}
 					</tbody>
 				</table>

@@ -2,11 +2,11 @@
 	import "bulma/css/bulma.css";
 	import "font-awesome/css/font-awesome.css";
 
-	// import ListContracts from "./components/ListContracts.svelte";
 	// import Show from "./components/Show.svelte";
 	import Connect from "./components/connect/Connect.svelte";
 	import CustomQuery from "./components/CustomQuery.svelte";
 	import LevelItem from "./components/LevelItem.svelte";
+	import ListContracts from "./components/contracts/ListContracts.svelte";
 	import ListShips from "./components/ships/ListShips.svelte";
 	import Register from "./components/connect/Register.svelte";
 	import Show from "./components/Show.svelte";
@@ -18,6 +18,7 @@
 	import ShowWaypoint from "./components/systems/ShowWaypoint.svelte";
 
 	import { ships } from "./stores/ships";
+	import { contracts } from "./stores/contracts";
 	import { token, agent, surveys, systems } from "./stores/store";
 
 	let show;
@@ -32,8 +33,10 @@
 		show = x;
 	};
 	const onListShips = (x) => {
-		show = x;
 		$ships = x?.body?.data ?? [];
+	};
+	const onListContracts = (x) => {
+		$contracts = x?.body?.data ?? []
 	};
 	const onClick = (s) => {
 		selected = s;
@@ -67,6 +70,7 @@
 			<ShowAgent />
 			<CustomQuery />
 			<ListShips {onListShips} />
+			<ListContracts {onListContracts} />
 			<Status {onStatus} />
 			<Show value={show} />
 		</div>
