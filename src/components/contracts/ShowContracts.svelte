@@ -8,10 +8,7 @@
 	} from "../../lib/api";
 	import Show from "../Show.svelte";
 	import { getRelativeTimeString } from "../../lib/time";
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
    import Copy from "../Copy.svelte";
-	const In = (what, delta = 0) => { $scheduler = scheduleIn($scheduler, what, delta); }
-	const Now = (what) => () => { $scheduler = scheduleIn($scheduler, what, 0); }
 
 	let err;
 	export let showTitle = false;
@@ -68,7 +65,7 @@
 {#if showTitle}
 	<div class="panel-heading">
 		Contracts &nbsp;
-		<button class="button is-small is-rounded" on:click={Now(onListContracts)}>
+		<button class="button is-small is-rounded" on:click={onListContracts}>
 			<span class="icon is-small">
 				<i class="fa fa-refresh" />
 			</span>
@@ -132,7 +129,7 @@
 								class="button is-small is-rounded is-success"
 								type="button"
 								disabled={contract.fulfilled}
-								on:click={Now(()=>onAccept({ contractId: contract.id }))}
+								on:click={()=>onAccept({ contractId: contract.id })}
 							>
 								<span class="icon is-small">
 									<i class="fa fa-check" />
@@ -147,7 +144,7 @@
 								class="button is-small is-rounded is-success"
 								type="button"
 								disabled={contract.fulfilled}
-								on:click={Now(()=>onFulfill({ contractId: contract.id }))}
+								on:click={()=>onFulfill({ contractId: contract.id })}
 							>
 								<span class="icon is-small">
 									<i class="fa fa-check" />

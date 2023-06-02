@@ -14,10 +14,6 @@
 		waypoints,
 		waypointsSet,
 	} from "../../stores/waypoints";
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
-	const Now = (what) => () => {
-		$scheduler = scheduleIn($scheduler, what, 0);
-	};
 
 	export let showTitle = false;
 
@@ -65,7 +61,7 @@
 {#if showTitle}
 	<div class="panel-heading">
 		Systems &nbsp;
-		<button class="button is-small is-rounded" on:click={Now(onListSystems)}>
+		<button class="button is-small is-rounded" on:click={onListSystems}>
 			<span class="icon is-small">
 				<i class="fa fa-refresh" />
 			</span>
@@ -90,9 +86,9 @@
 					<td>
 						<button
 							class="button is-small is-rounded is-info"
-							on:click={Now(() => {
+							on:click={() => {
 								onWPSystems({ systemSymbol: system.symbol });
-							})}
+							}}
 						>
 							<span class="icon is-small">
 								<i class="fa fa-street-view" />

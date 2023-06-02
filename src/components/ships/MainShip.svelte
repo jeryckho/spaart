@@ -20,12 +20,6 @@
 	import { token, agent, keepers, surveys } from "../../stores/store";
 	import { ships, shipsSet } from "../../stores/ships";
 	import { contracts, contractsSet } from "../../stores/contracts";
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
-	const Now =
-		(what, ms = 0) =>
-		() => {
-			$scheduler = scheduleIn($scheduler, what, ms);
-		};
 
 	export let symbol;
 
@@ -263,18 +257,14 @@
 			(i) => !$keepers.includes(i.symbol)
 		);
 		if (toSell.length) {
-			Now(onDock)();
+			await onDock();
 			for (const item of toSell) {
-				Now(
-					() =>
-						onSell({
-							symbol: item.symbol,
-							units: item.units,
-						}),
-					1000
-				)();
+				await onSell({
+					symbol: item.symbol,
+					units: item.units,
+				});
 			}
-			Now(onOrbit, 1000)();
+			await onOrbit();
 		}
 	};
 
@@ -282,7 +272,7 @@
 		if (Coolmove?.remainingSeconds && Coolmove?.remainingSeconds > 0) {
 			Coolmove.remainingSeconds--;
 			if (Coolmove.remainingSeconds === 0) {
-				Now(onShip)();
+				onShip();
 			}
 		}
 		if (Cooldown?.remainingSeconds && Cooldown?.remainingSeconds > 0) {
@@ -293,16 +283,16 @@
 			) {
 				switch (mission) {
 					case "Extract_Max":
-						if (ship.cargo.units < ship.cargo.capacity) Now(onExtract)();
+						if (ship.cargo.units < ship.cargo.capacity) onExtract();
 						break;
 
 					case "Extract_Sell":
 						if (ship.cargo.units < ship.cargo.capacity)
-							Now(onExtractSell)();
+							onExtractSell();
 						break;
 
 					case "Survey_All":
-						Now(onSurvey)();
+						onSurvey();
 						break;
 
 					default:
@@ -332,13 +322,13 @@
 			<button
 				class="button is-small is-rounded is-success"
 				type="button"
-				on:click={Now(onOrbit)}>Orbit</button
+				on:click={onOrbit}>Orbit</button
 			>
 		{:else if ship.nav.status === "IN_ORBIT"}
 			<button
 				class="button is-small is-rounded is-success"
 				type="button"
-				on:click={Now(onDock)}
+				on:click={onDock}
 			>
 				Dock
 			</button>
@@ -394,7 +384,7 @@
 			class="button is-small is-rounded is-warning"
 			type="button"
 			disabled={inCoolDown || ship.nav.status !== "IN_ORBIT"}
-			on:click={Now(onAction)}
+			on:click={onAction}
 		>
 			<span class="icon is-small">
 				<i class="fa fa-check" />
@@ -425,7 +415,7 @@
 				<select
 					class="button is-small is-rounded is-link"
 					bind:value={selFM}
-					on:change={Now(() => onSetNav({ flightMode: selFM }))}
+					on:change={() => onSetNav({ flightMode: selFM })}
 				>
 					{#each ["DRIFT", "STEALTH", "CRUISE", "BURN"] as flightMode}
 						<option
@@ -450,7 +440,7 @@
 						hideDest = false;
 					} else {
 						hideDest = true;
-						if (iDest) Now(onNavigate({ waypointSymbol: iDest }))();
+						if (iDest) onNavigate({ waypointSymbol: iDest });
 					}
 				}}
 			>
@@ -471,7 +461,7 @@
 	<button
 		class="button is-small is-rounded is-info"
 		disabled={ship.nav.status !== "DOCKED"}
-		on:click={Now(onFuel)}
+		on:click={onFuel}
 	>
 		<span class="icon is-small">
 			<i
@@ -497,7 +487,7 @@
 		</span>
 	</button>
 	&nbsp; Cargo : {ship.cargo.units} / {ship.cargo.capacity} &nbsp;
-	<button class="button is-small is-rounded" on:click={Now(onCargo)}>
+	<button class="button is-small is-rounded" on:click={onCargo}>
 		<span class="icon is-small">
 			<i class="fa fa-refresh" />
 		</span>
@@ -545,25 +535,23 @@
 										<button
 											class="button is-small is-rounded is-warning"
 											type="button"
-											on:click={Now(() =>
+											on:click={() =>
 												onSell({
 													symbol: item.symbol,
 													units: item.units,
-												})
-											)}>Sell</button
+												})}>Sell</button
 										>
 									{/if}
 									{#each $contracts.filter((v) => v.terms.deliver.some((d) => d.destinationSymbol === ship.nav.waypointSymbol && d.tradeSymbol === item.symbol) && v.accepted && !v.fulfilled) as Contract}
 										<button
 											class="button is-small is-rounded is-warning"
 											type="button"
-											on:click={Now(() =>
+											on:click={() =>
 												onDeliver({
 													tradeSymbol: item.symbol,
 													units: item.units,
 													contractId: Contract.id,
-												})
-											)}>Deliver</button
+												})}>Deliver</button
 										>
 									{/each}
 								{/if}
@@ -571,13 +559,12 @@
 									<button
 										class="button is-small is-rounded is-info"
 										type="button"
-										on:click={Now(() =>
+										on:click={() =>
 											onXfr({
 												tradeSymbol: item.symbol,
 												units: item.units,
 												shipDestSymbol: selXfr,
-											})
-										)}>Transfer</button
+											})}>Transfer</button
 									>
 								{/if}
 							</div>

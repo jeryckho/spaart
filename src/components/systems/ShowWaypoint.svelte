@@ -12,11 +12,7 @@
 		waypoints,
 		waypointsPut,
 	} from "../../stores/waypoints";
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
    import Trait from "./Trait.svelte";
-	const Now = (what) => () => {
-		$scheduler = scheduleIn($scheduler, what, 0);
-	};
 
 	export let showTitle = false;
 	export let systemSymbol;
@@ -48,9 +44,9 @@
 			Waypoint {#if waypointSymbol}<Copy value={waypointSymbol} />{/if}&nbsp;
 			<button
 				class="button is-small is-rounded"
-				on:click={Now(() => {
+				on:click={() => {
 					onWaypoint({ systemSymbol, waypointSymbol });
-				})}
+				}}
 			>
 				<span class="icon is-small">
 					<i class="fa fa-refresh" />

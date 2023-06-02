@@ -9,9 +9,6 @@
 	import { ships, shipsSet } from "../../stores/ships";
 	import { getShip } from "../../lib/api";
    import Show from '../Show.svelte';
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
-	const In = (what, delta = 0) => { $scheduler = scheduleIn($scheduler, what, delta); }
-	const Now = (what) => () => { $scheduler = scheduleIn($scheduler, what, 0); }
 
 	export let symbol;
 	let ship;
@@ -38,7 +35,7 @@
 
 <div class="panel-heading">
 	{symbol} &nbsp;
-	<button class="button is-small is-rounded" on:click={Now(onShip)}>
+	<button class="button is-small is-rounded" on:click={onShip}>
 		<span class="icon is-small">
 			<i class="fa fa-refresh" />
 		</span>

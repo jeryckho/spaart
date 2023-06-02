@@ -1,8 +1,5 @@
 <script>
 	import { getStatus } from "../lib/api";
-	import { scheduler, scheduleIn } from "../stores/scheduler";
-	const In = (what, delta = 0) => { $scheduler = scheduleIn($scheduler, what, delta); }
-	const Now = (what) => () => { $scheduler = scheduleIn($scheduler, what, 0); }
 
 	export let onStatus = (_) => {};
 
@@ -16,6 +13,6 @@
 <div class="row">
 	<button
 		type="button"
-		on:click={Now(onButton)}>Status</button
+		on:click={onButton}>Status</button
 	>
 </div>

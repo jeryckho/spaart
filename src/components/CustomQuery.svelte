@@ -1,9 +1,6 @@
 <script>
    import { customQuery } from "../lib/api";
 	import { queries, token } from "../stores/store";
-	import { scheduler, scheduleIn } from "../stores/scheduler";
-	const In = (what, delta = 0) => { $scheduler = scheduleIn($scheduler, what, delta); }
-	const Now = (what) => () => { $scheduler = scheduleIn($scheduler, what, 0); }
 
 	let toLoad;
 
@@ -125,7 +122,7 @@
 			<button
 				class="button is-small is-rounded is-info"
 				type="button"
-				on:click={Now(onQuery)}
+				on:click={onQuery}
 			>
 				Send
 			</button>

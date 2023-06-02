@@ -3,10 +3,6 @@
 
 	import { token, keepers } from "../../stores/store";
 	import { waypoints, waypointsMod } from "../../stores/waypoints";
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
-	const Now = (what) => () => {
-		$scheduler = scheduleIn($scheduler, what, 0);
-	};
 
 	export let systemSymbol;
 	export let waypointSymbol;
@@ -42,9 +38,9 @@
 		Market &nbsp;
 		<button
 			class="button is-small is-rounded"
-			on:click={Now(() => {
+			on:click={() => {
 				onMarket({ systemSymbol, waypointSymbol });
-			})}
+			}}
 		>
 			<span class="icon is-small">
 				<i class="fa fa-refresh" />

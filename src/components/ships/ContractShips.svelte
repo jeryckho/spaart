@@ -5,9 +5,6 @@
 	import { negotiateContractShip } from "../../lib/api";
 	import Show from "../Show.svelte";
 	import ShowContracts from "../contracts/ShowContracts.svelte";
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
-	const In = (what, delta = 0) => { $scheduler = scheduleIn($scheduler, what, delta); }
-	const Now = (what) => () => { $scheduler = scheduleIn($scheduler, what, 0); }
 
 	export let symbol;
 	let ship;
@@ -34,7 +31,7 @@
 	New contract : &nbsp; <button
 		class="button is-small is-rounded is-success"
 		type="button"
-		on:click={Now(onNegotiate)}
+		on:click={onNegotiate}
 	>
 		Negotiate
 	</button>

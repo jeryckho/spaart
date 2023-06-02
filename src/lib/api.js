@@ -1,7 +1,15 @@
 import superagent from 'superagent';
+import Throttle from 'superagent-throttle';
 import { Supplant } from './supplant';
 
 const Root = 'https://api.spacetraders.io/v2/'.replace(/\/+$/, '');
+
+let throttle = new Throttle({
+	active: true,	// set false to pause queue
+	rate: 1,			// how many requests can be sent every `ratePer`
+	ratePer: 501,	// number of ms in which `rate` requests may be sent
+	concurrent: 2	// how many requests can be sent concurrently
+ })
 
 const remElems = (obj, Elems) => {
 	let Retour = {};
@@ -26,7 +34,7 @@ const splitObject = (body, { queryElems = [], pathElems = [] }) => ({
  * Get Status
  * @returns {Promise<{body:{data:Status}}>}
  */
-export const getStatus = () => superagent.get(Root + '/').accept('json');
+export const getStatus = () => superagent.get(Root + '/').use(throttle.plugin(undefined)).accept('json');
 
 /**
  * @typedef {Object} Register
@@ -42,6 +50,7 @@ export const getStatus = () => superagent.get(Root + '/').accept('json');
  */
 export const register = (data) =>
 	superagent.post(Root + '/register')
+		.use(throttle.plugin(undefined))
 		.send(data)
 		.accept('json');
 
@@ -51,7 +60,7 @@ export const register = (data) =>
  * Get Agent details
  * @returns {Promise<{body:{data: Agent}}>}
  */
-export const getAgent = () => superagent.get(Root + '/my/agent').accept('json');
+export const getAgent = () => superagent.get(Root + '/my/agent').use(throttle.plugin(undefined)).accept('json');
 
 /* CONTRACTS */
 
@@ -70,6 +79,7 @@ export const getAgent = () => superagent.get(Root + '/my/agent').accept('json');
 export const listContracts = (data) => {
 	const { token, query } = splitObject(data, { queryElems: ['page', 'limit'] });
 	return superagent.get(Root + '/my/contracts')
+		.use(throttle.plugin(undefined))
 		.query(query)
 		.auth(token, { type: "bearer" })
 		.accept('json');
@@ -83,6 +93,7 @@ export const listContracts = (data) => {
 export const deliverContract = (data) => {
 	const { token, path, body } = splitObject(data, { pathElems: ['contractId'] });
 	return superagent.post(Root + Supplant("/my/contracts/{contractId}/deliver", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.send(body)
 		.accept('json');
@@ -96,6 +107,7 @@ export const deliverContract = (data) => {
 export const acceptContract = (data) => {
 	const { token, path, body } = splitObject(data, { pathElems: ['contractId'] });
 	return superagent.post(Root + Supplant("/my/contracts/{contractId}/accept", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.send(body)
 		.accept('json');
@@ -109,6 +121,7 @@ export const acceptContract = (data) => {
 export const fulfillContract = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['contractId'] });
 	return superagent.post(Root + Supplant("/my/contracts/{contractId}/fulfill", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -130,6 +143,7 @@ export const fulfillContract = (data) => {
 export const listShips = (data) => {
 	const { token, query } = splitObject(data, { queryElems: ['page', 'limit'] });
 	return superagent.get(Root + '/my/ships')
+		.use(throttle.plugin(undefined))
 		.query(query)
 		.auth(token, { type: "bearer" })
 		.accept('json');
@@ -143,6 +157,7 @@ export const listShips = (data) => {
 export const getShip = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.get(Root + Supplant("/my/ships/{shipSymbol}", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -155,6 +170,7 @@ export const getShip = (data) => {
 export const orbitShip = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/orbit", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -167,6 +183,7 @@ export const orbitShip = (data) => {
 export const refuelShip = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/refuel", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -179,6 +196,7 @@ export const refuelShip = (data) => {
 export const dockShip = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/dock", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -191,6 +209,7 @@ export const dockShip = (data) => {
 export const surveyShip = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/survey", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -213,6 +232,7 @@ export const surveyShip = (data) => {
 export const extractShip = (data) => {
 	const { token, path, body } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/extract", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.send(body)
 		.accept('json');
@@ -226,6 +246,7 @@ export const extractShip = (data) => {
 export const sellShip = (data) => {
 	const { token, path, body } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/sell", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.send(body)
 		.accept('json');
@@ -239,6 +260,7 @@ export const sellShip = (data) => {
 export const setShipNav = (data) => {
 	const { token, path, body } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.patch(Root + Supplant("/my/ships/{shipSymbol}/nav", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.send(body)
 		.accept('json');
@@ -252,6 +274,7 @@ export const setShipNav = (data) => {
 export const navigateShip = (data) => {
 	const { token, path, body } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/navigate", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.send(body)
 		.accept('json');
@@ -265,6 +288,7 @@ export const navigateShip = (data) => {
 export const transferShip = (data) => {
 	const { token, path, body: { shipDestSymbol: shipSymbol, ...rest } } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/transfer", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.send({ shipSymbol, ...rest })
 		.accept('json');
@@ -278,6 +302,7 @@ export const transferShip = (data) => {
 export const getCargoShip = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.get(Root + Supplant("/my/ships/{shipSymbol}/cargo", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -285,11 +310,12 @@ export const getCargoShip = (data) => {
 /**
  * Negotiate Contract
  * @param {{shipSymbol: string, token: string}} data 
- * @returns {Promise<{body:{data:{contact:Contract}}}>}
+ * @returns {Promise<{body:{data:{contract:Contract}}}>}
  */
 export const negotiateContractShip = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['shipSymbol'] });
 	return superagent.post(Root + Supplant("/my/ships/{shipSymbol}/negotiate/contract", path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -304,6 +330,7 @@ export const negotiateContractShip = (data) => {
 export const listSystems = (data) => {
 	const { token, query } = splitObject(data, { queryElems: ['page', 'limit'] });
 	return superagent.get(Root + '/systems')
+		.use(throttle.plugin(undefined))
 		.query(query)
 		.auth(token, { type: "bearer" })
 		.accept('json');
@@ -317,6 +344,7 @@ export const listSystems = (data) => {
 export const waypointsSystems = (data) => {
 	const { token, path, query } = splitObject(data, { pathElems: ['systemSymbol'], queryElems: ['page', 'limit'] });
 	return superagent.get(Root + Supplant('/systems/{systemSymbol}/waypoints', path))
+		.use(throttle.plugin(undefined))
 		.query(query)
 		.auth(token, { type: "bearer" })
 		.accept('json');
@@ -330,6 +358,7 @@ export const waypointsSystems = (data) => {
 export const getWaypointSystems = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['systemSymbol', 'waypointSymbol'] });
 	return superagent.get(Root + Supplant('/systems/{systemSymbol}/waypoints/{waypointSymbol}', path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -342,6 +371,7 @@ export const getWaypointSystems = (data) => {
 export const getMarket = (data) => {
 	const { token, path } = splitObject(data, { pathElems: ['systemSymbol', 'waypointSymbol'] });
 	return superagent.get(Root + Supplant('/systems/{systemSymbol}/waypoints/{waypointSymbol}/market', path))
+		.use(throttle.plugin(undefined))
 		.auth(token, { type: "bearer" })
 		.accept('json');
 }
@@ -374,6 +404,7 @@ export const customQuery = (data) => {
 	const url = data.Root.replace(/\/+$/, '') + (data.HasPathParams ? Supplant(data.Path, JSON.parse(data.PathParams)) : data.Path);
 	let agent = superagent(data.Method, url);
 	if (data.useAuth)
+		agent	= agent.use(throttle.plugin(undefined));
 		agent = agent.auth(data.token, { type: "bearer" })
 	
 	if (data.HasQueryParams)

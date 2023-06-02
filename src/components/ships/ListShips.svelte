@@ -1,9 +1,6 @@
 <script>
 	import { token } from "../../stores/store";
 	import { listShips } from "../../lib/api";
-	import { scheduler, scheduleIn } from "../../stores/scheduler";
-	const In = (what, delta = 0) => { $scheduler = scheduleIn($scheduler, what, delta); }
-	const Now = (what) => () => { $scheduler = scheduleIn($scheduler, what, 0); }
 
 	export let onListShips = (_) => {};
 	const onButton = async () => {
@@ -16,6 +13,6 @@
 <div class="row">
 	<button
 		type="button"
-		on:click={Now(onButton)}>List Ships</button
+		on:click={onButton}>List Ships</button
 	>
 </div>
