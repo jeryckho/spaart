@@ -5,7 +5,7 @@
 	import Show from "../Show.svelte";
 	import Market from './Market.svelte';
 
-	import { getWaypointSystems } from "../../lib/api";
+	import { getWaypoint } from "../../lib/api";
 
 	import { token } from "../../stores/store";
 	import {
@@ -22,7 +22,7 @@
 
 	const onWaypoint = async (data) => {
 		try {
-			const done = await getWaypointSystems({
+			const done = await getWaypoint({
 				...data,
 				token: $token,
 			});

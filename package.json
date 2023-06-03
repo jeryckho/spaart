@@ -23,6 +23,8 @@
     "bulma": "^0.9.4",
     "font-awesome": "^4.7.0",
     "immer": "^10.0.2",
+    "jsonata": "^2.0.3",
+    "mustache": "^4.2.0",
     "openapi-typescript": "^6.2.5",
     "superagent": "^8.0.9",
     "superagent-throttle": "^1.0.1",

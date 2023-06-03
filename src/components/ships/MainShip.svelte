@@ -5,15 +5,15 @@
 	import {
 		orbitShip,
 		dockShip,
-		extractShip,
-		sellShip,
-		setShipNav,
+		extractResources,
+		sellCargo,
+		patchShipNav,
 		navigateShip,
-		transferShip,
-		getCargoShip,
+		transferCargo,
+		getShipCargo,
 		deliverContract,
 		getShip,
-		surveyShip,
+		createSurvey,
 		refuelShip,
 	} from "../../lib/api";
 
@@ -87,7 +87,7 @@
 	};
 	const onCargo = async () => {
 		try {
-			const done = await getCargoShip({
+			const done = await getShipCargo({
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
@@ -109,7 +109,7 @@
 	};
 	const onSell = async (data) => {
 		try {
-			const done = await sellShip({
+			const done = await sellCargo({
 				...data,
 				shipSymbol: ship.symbol,
 				token: $token,
@@ -134,7 +134,7 @@
 	};
 	const onXfr = async (data) => {
 		try {
-			const done = await transferShip({
+			const done = await transferCargo({
 				...data,
 				shipSymbol: ship.symbol,
 				token: $token,
@@ -146,7 +146,7 @@
 	};
 	const onSetNav = async (data) => {
 		try {
-			const done = await setShipNav({
+			const done = await patchShipNav({
 				...data,
 				shipSymbol: ship.symbol,
 				token: $token,
@@ -166,7 +166,7 @@
 				survey = $surveys.find((s) => s.signature === iCtx);
 				if (!survey) iCtx = undefined;
 			}
-			const done = await extractShip({
+			const done = await extractResources({
 				survey,
 				shipSymbol: ship.symbol,
 				token: $token,
@@ -181,7 +181,7 @@
 
 	const onSurvey = async () => {
 		try {
-			const done = await surveyShip({
+			const done = await createSurvey({
 				shipSymbol: ship.symbol,
 				token: $token,
 			});

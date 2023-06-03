@@ -7,7 +7,7 @@
 	import Show from "../Show.svelte";
 	import Copy from "../Copy.svelte";
 
-	import { listSystems, waypointsSystems } from "../../lib/api";
+	import { listSystems, listWaypoints } from "../../lib/api";
 
 	import { token, systems, lastSystems } from "../../stores/store";
 	import {
@@ -41,7 +41,7 @@
 
 	const onWPSystems = async (data) => {
 		try {
-			const done = await waypointsSystems({
+			const done = await listWaypoints({
 				...data,
 				limit: 20,
 				token: $token,

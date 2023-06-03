@@ -1,7 +1,7 @@
 <script>
   import BuySell from './BuySell.svelte';
 
-	import { getMarket, sellShip, purchaseCargo } from "../../lib/api";
+	import { getMarket, sellCargo, purchaseCargo } from "../../lib/api";
 
 	import { ships, shipsSet } from "../../stores/ships";
 	import { token, keepers, agent } from "../../stores/store";
@@ -30,7 +30,7 @@
 
 	const onSell = async (data) => {
 		try {
-			const done = await sellShip({
+			const done = await sellCargo({
 				...data,
 				shipSymbol: Ship.symbol,
 				token: $token,

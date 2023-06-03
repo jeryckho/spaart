@@ -1,0 +1,58 @@
+{{=<< >>=}}
+/*
+A throttled superagent version of: <<swagger.info.title>> <<swagger.info.version>>
+
+<<&swagger.info.description>>*/
+
+import superagent from "superagent";
+import Throttle from "superagent-throttle";
+import { Supplant } from './supplant';
+
+const Root = "<<&swagger.servers.0.url>>".replace(/\/+$/, "");
+
+const throttle = new Throttle({
+	active: true,	// set false to pause queue
+	rate: 1,			// how many requests can be sent every `ratePer`
+	ratePer: 501,	// number of ms in which `rate` requests may be sent
+	concurrent: 2	// how many requests can be sent concurrently
+});
+
+<<#normalizedPaths>>
+/**
+ * <<summary>>
+ * <<#description>><<&inline>><</description>>
+ * @param {<<typedArgs>>} data
+ * @returns {Promise<{body:<<typedResponse>>}>}
+*/<<#checkConflict>>
+ERROR<</checkConflict>>
+export const <<#summary>><<camelize>><</summary>> = (<<args>>) => superagent
+	.<<method>>(`${Root}<<#path>><<&backtick>><</path>>`)
+	.use(throttle.plugin(undefined))<<#hasAuth>>
+	.auth(token, { type: "bearer" })<</hasAuth>><<#hasQuery>>
+	.query(<<queryArgs>>)<</hasQuery>><<#hasBody>>
+	.send(<<bodyArgs>>)<</hasBody>>
+	.accept("json");
+
+<</normalizedPaths>>
+/* DIV */
+
+/**
+ * Exexcute a custom query
+ * @param {{ Name:string, Method:string, Root:string, Path:string, useAuth:boolean, HasPathParams:boolean, PathParams:string, HasQueryParams:boolean, QueryParams:string, HasBody:boolean, Body:string, Answer:string, token:string }} data 
+ * @returns {Promise<{ body:{ data:object, meta?:Meta } }>}
+ */
+export const customQuery = (data) => {
+	const url = data.Root.replace(/\/+$/, "") + (data.HasPathParams ? Supplant(data.Path, JSON.parse(data.PathParams)) : data.Path);
+	let agent = superagent(data.Method, url);
+	if (data.useAuth)
+		agent = agent.use(throttle.plugin(undefined));
+	agent = agent.auth(data.token, { type: "bearer" })
+
+	if (data.HasQueryParams)
+		agent = agent.query(JSON.parse(data.QueryParams));
+
+	if (data.HasBody)
+		agent = agent.send(JSON.parse(data.Body));
+
+	return agent.accept("json");
+}

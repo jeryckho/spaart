@@ -1,0 +1,19 @@
+(
+    $addPath := λ($v, $k) { $merge([$v, {"path":$k}])};
+    {
+        "normalizedPaths": [swagger.paths.$each($addPath).
+        (
+            $Path := path;
+            $Params := parameters;
+            $.$sift(λ($v, $k) {$k ~> /^(get|post|patch)$/}) ~> $each(λ($v,$k) { $merge([{
+                "method": $k,
+                "path": $Path,
+                "upParameters": parameters
+            }, $v]) }) ~> |$|{
+                "responses":[responses.*.content.`application/json`.schema][0],
+                "requestBody":[requestBody.content.`application/json`.schema][0]
+            }|
+        )]^(path,method),
+        "swagger":swagger
+    }
+)

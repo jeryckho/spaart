@@ -21,6 +21,8 @@
 	import { contracts } from "./stores/contracts";
 	import { token, agent, surveys, systems } from "./stores/store";
 
+	import { registerNewAgent } from "./lib/api";
+
 	let show;
 	let selected = "Ships";
 	let waypointData;
@@ -28,6 +30,15 @@
 	const onConnect = (x) => {
 		$token = x;
 	};
+
+	const onRegister = async (x) => {
+		try {
+			const done = await registerNewAgent(x);
+			$token = done?.body?.data?.token;
+		} catch (error) {
+			console.log("Arf");
+		}
+	}
 
 	const onStatus = (x) => {
 		show = x;
@@ -99,6 +110,6 @@
 	{:else}
 		<Connect pw={$token} {onConnect} />
 		<hr />
-		<Register />
+		<Register {onRegister}/>
 	{/if}
 </main>

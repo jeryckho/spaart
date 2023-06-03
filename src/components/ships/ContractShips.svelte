@@ -2,7 +2,7 @@
 	import { token } from "../../stores/store";
 	import { ships } from "../../stores/ships";
 	import { contracts } from "../../stores/contracts";
-	import { negotiateContractShip } from "../../lib/api";
+	import { negotiateContract } from "../../lib/api";
 	import Show from "../Show.svelte";
 	import ShowContracts from "../contracts/ShowContracts.svelte";
 
@@ -12,7 +12,7 @@
 
 	const onNegotiate = async () => {
 		try {
-			const done = await negotiateContractShip({
+			const done = await negotiateContract({
 				shipSymbol: symbol,
 				token: $token,
 			});
