@@ -52,7 +52,7 @@
 				}}
 			>
 				<span class="icon is-small">
-					<i class="fa fa-refresh" />
+					<i class="fa-solid fa-refresh" />
 				</span>
 			</button>
 			{#if back}
@@ -61,7 +61,7 @@
 					on:click={() => { $page = pageSet($page, { selected: back })}}
 				>
 					<span class="icon is-small">
-						<i class="fa fa-hand-o-left" />
+						<i class="fa-solid fa-hand-o-left" />
 					</span>
 				</button>
 			{/if}

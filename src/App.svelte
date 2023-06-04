@@ -1,6 +1,7 @@
 <script>
 	import "bulma/css/bulma.css";
-	import "font-awesome/css/font-awesome.css";
+	import "./assets/fontawesome/css/fontawesome.css";
+	import "./assets/fontawesome/css/solid.css";
 
 	// import Show from "./components/Show.svelte";
 	import Connect from "./components/connect/Connect.svelte";

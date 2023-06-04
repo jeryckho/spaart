@@ -10,7 +10,7 @@
 
 <div class="icon-text">
 	<span class="icon has-text-success" title="scanned">
-		<i class="fa fa-map-marker" />
+		<i class="fa-solid fa-map-marker" />
 	</span>
 	{#each traits as trait}
 		<Trait {trait} />	

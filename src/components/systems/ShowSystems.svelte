@@ -65,7 +65,7 @@
 		Systems &nbsp;
 		<button class="button is-small is-rounded" on:click={onListSystems}>
 			<span class="icon is-small">
-				<i class="fa fa-refresh" />
+				<i class="fa-solid fa-refresh" />
 			</span>
 		</button>
 	</div>
@@ -93,7 +93,7 @@
 							}}
 						>
 							<span class="icon is-small">
-								<i class="fa fa-street-view" />
+								<i class="fa-solid fa-street-view" />
 							</span>
 						</button>
 					</td>
@@ -116,7 +116,7 @@
 												}}
 											>
 												<span class="icon is-small">
-													<i class="fa fa-eye" />
+													<i class="fa-solid fa-eye" />
 												</span>
 											</button>
 											<Copy value={waypoint.symbol} /></td

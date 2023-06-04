@@ -76,7 +76,7 @@
 				}}
 			>
 				<span class="icon is-small">
-					<i class="fa fa-refresh" />
+					<i class="fa-solid fa-refresh" />
 				</span>
 			</button>
 		</div>

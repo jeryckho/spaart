@@ -79,7 +79,7 @@
 				}}
 			>
 				<span class="icon is-small">
-					<i class="fa fa-refresh" />
+					<i class="fa-solid fa-refresh" />
 				</span>
 			</button>
 		</div>
@@ -102,7 +102,7 @@
 											);
 										}}
 									>
-										<i class="fa fa-ban" />
+										<i class="fa-solid fa-ban" />
 									</span>
 								{:else}
 									<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -112,7 +112,7 @@
 											$keepers = [...$keepers, symbol];
 										}}
 									>
-										<i class="fa fa-shopping-cart" />
+										<i class="fa-solid fa-shopping-cart" />
 									</span>
 								{/if}
 							</td>
@@ -127,7 +127,7 @@
 							<td>
 								{#if (Imports.includes(symbol) || Exchange.includes(symbol))}
 									<span class="icon">
-										<i class="fa fa-sign-in" />
+										<i class="fa-solid fa-sign-in" />
 									</span>
 								{/if} &nbsp; {sellPrice}
 							</td>
@@ -135,7 +135,7 @@
 							<td>
 								{#if (Exports.includes(symbol) || Exchange.includes(symbol))}
 									<span class="icon">
-										<i class="fa fa-sign-out" />
+										<i class="fa-solid fa-sign-out" />
 									</span>
 								{/if} &nbsp; {purchasePrice}
 							</td>
@@ -166,7 +166,7 @@
 												);
 											}}
 										>
-											<i class="fa fa-ban" />
+											<i class="fa-solid fa-ban" />
 										</span>
 									{:else}
 										<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -176,7 +176,7 @@
 												$keepers = [...$keepers, item];
 											}}
 										>
-											<i class="fa fa-shopping-cart" />
+											<i class="fa-solid fa-shopping-cart" />
 										</span>
 									{/if}
 								</td>
@@ -184,14 +184,14 @@
 								<td>
 									{#if (Imports.includes(item) || Exchange.includes(item))}
 										<span class="icon">
-											<i class="fa fa-sign-in" />
+											<i class="fa-solid fa-sign-in" />
 										</span>
 									{/if}
 								</td>
 								<td>
 									{#if (Exports.includes(item) || Exchange.includes(item))}
 										<span class="icon">
-											<i class="fa fa-sign-out" />
+											<i class="fa-solid fa-sign-out" />
 										</span>
 									{/if}
 							</tr>

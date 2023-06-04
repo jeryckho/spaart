@@ -67,7 +67,7 @@
 		Contracts &nbsp;
 		<button class="button is-small is-rounded" on:click={onListContracts}>
 			<span class="icon is-small">
-				<i class="fa fa-refresh" />
+				<i class="fa-solid fa-refresh" />
 			</span>
 		</button>
 	</div>
@@ -132,7 +132,7 @@
 								on:click={()=>onAccept({ contractId: contract.id })}
 							>
 								<span class="icon is-small">
-									<i class="fa fa-check" />
+									<i class="fa-solid fa-check" />
 								</span>
 							</button>
 						{/if}
@@ -147,7 +147,7 @@
 								on:click={()=>onFulfill({ contractId: contract.id })}
 							>
 								<span class="icon is-small">
-									<i class="fa fa-check" />
+									<i class="fa-solid fa-check" />
 								</span>
 							</button>
 						{/if}

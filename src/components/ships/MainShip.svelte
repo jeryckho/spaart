@@ -329,18 +329,27 @@
 	<div class="buttons has-addons">
 		{#if ship.nav.status === "DOCKED"}
 			<button
-				class="button is-small is-rounded is-success"
+				class="button is-small is-rounded is-info"
 				type="button"
-				on:click={onOrbit}>Orbit</button
-			>
+				on:click={onOrbit}>
+				<span class="icon is-small">
+					<i
+						class="fa-solid fa-arrow-turn-up"
+					/>
+				</span>
+			</button>
 		{:else if ship.nav.status === "IN_ORBIT"}
 			<button
-				class="button is-small is-rounded is-success"
+				class="button is-small is-rounded is-link"
 				type="button"
 				on:click={onDock}
 			>
-				Dock
-			</button>
+			<span class="icon is-small">
+				<i
+					class="fa-solid fa-anchor"
+				/>
+			</span>
+		</button>
 		{/if}
 	</div>
 	{#if ship.nav.status === "IN_TRANSIT"}
@@ -376,7 +385,7 @@
 		>
 			<span class="icon is-small">
 				<i
-					class="fa"
+					class="fa-solid"
 					class:fa-angle-right={hideCtx}
 					class:fa-angle-left={!hideCtx}
 				/>
@@ -390,13 +399,13 @@
 			/>
 		{/if}
 		<button
-			class="button is-small is-rounded is-warning"
+			class="button is-small is-rounded is-success"
 			type="button"
 			disabled={inCoolDown || ship.nav.status !== "IN_ORBIT"}
 			on:click={onAction}
 		>
 			<span class="icon is-small">
-				<i class="fa fa-check" />
+				<i class="fa-solid fa-check" />
 			</span>
 		</button>
 	</div>
@@ -425,10 +434,16 @@
 			}}
 		>
 			<span class="icon is-small">
-				<i class="fa fa-eye" />
+				<i class="fa-solid fa-eye" />
 			</span>
 		</button>
-		<Copy value={ship.nav.route.departure.symbol} />&nbsp;=&gt;&nbsp;
+		<Copy value={ship.nav.route.departure.symbol} />
+		&nbsp;
+		<span class="icon is-small">
+			<i class="fa-solid fa-shuttle-space" />
+		</span>
+		&nbsp;
+		<Copy value={ship.nav.route.destination.symbol} />
 		<button
 			class="button is-small is-rounded"
 			on:click={() => {
@@ -439,10 +454,9 @@
 			}}
 		>
 			<span class="icon is-small">
-				<i class="fa fa-eye" />
+				<i class="fa-solid fa-eye" />
 			</span>
 		</button>
-		<Copy value={ship.nav.route.destination.symbol} />
 	{:else}
 		<button
 			class="button is-small is-rounded"
@@ -454,7 +468,7 @@
 			}}
 		>
 			<span class="icon is-small">
-				<i class="fa fa-eye" />
+				<i class="fa-solid fa-eye" />
 			</span>
 		</button>
 		<Copy value={ship.nav.waypointSymbol} /> &nbsp;
@@ -494,9 +508,8 @@
 			>
 				<span class="icon is-small">
 					<i
-						class="fa"
-						class:fa-rocket={iDest}
-						class:fa-space-shuttle={!iDest}
+						class="fa-solid fa-rocket"
+						class:fa-beat-fade={iDest}
 					/>
 				</span>
 			</button>
@@ -514,7 +527,7 @@
 		>
 			<span class="icon is-small">
 				<i
-					class={`fa fa-battery-${
+					class={`fa-solid fa-battery-${
 						["empty", "quarter", "half", "three-quarters", "full"][
 							Math.round((4 * ship.fuel.current) / ship.fuel.capacity)
 						]
@@ -534,13 +547,13 @@
 			}}
 		>
 			<span class="icon is-small">
-				<i class={`fa fa-${showCargo ? "angle-down" : "angle-right"}`} />
+				<i class={`fa-solid fa-${showCargo ? "angle-down" : "angle-right"}`} />
 			</span>
 		</button>
 		&nbsp; Cargo : {ship.cargo.units} / {ship.cargo.capacity} &nbsp;
 		<button class="button is-small is-rounded" on:click={onCargo}>
 			<span class="icon is-small">
-				<i class="fa fa-refresh" />
+				<i class="fa-solid fa-refresh" />
 			</span>
 		</button>
 	</div>
@@ -562,7 +575,7 @@
 											);
 										}}
 									>
-										<i class="fa fa-ban" />
+										<i class="fa-solid fa-ban" />
 									</span>
 								{:else}
 									<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -572,7 +585,7 @@
 											$keepers = [...$keepers, item.symbol];
 										}}
 									>
-										<i class="fa fa-shopping-cart" />
+										<i class="fa-solid fa-shopping-cart" />
 									</span>
 								{/if}
 							</td>

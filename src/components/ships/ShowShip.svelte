@@ -37,7 +37,7 @@
 	{symbol} &nbsp;
 	<button class="button is-small is-rounded" on:click={onShip}>
 		<span class="icon is-small">
-			<i class="fa fa-refresh" />
+			<i class="fa-solid fa-refresh" />
 		</span>
 	</button>
 </div>
