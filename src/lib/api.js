@@ -574,12 +574,13 @@ export const getMarket = ({ systemSymbol, waypointSymbol, token }) => superagent
 /**
  * Get Shipyard
  * Get the shipyard for a waypoint. Send a ship to the waypoint to access ships that are currently available for purchase and recent transactions.
- * @param {{ systemSymbol:string, waypointSymbol:string }} data
+ * @param {{ systemSymbol:string, waypointSymbol:string, token:string }} data
  * @returns {Promise<{body:{ data:Shipyard }}>}
 */
-export const getShipyard = ({ systemSymbol, waypointSymbol }) => superagent
+export const getShipyard = ({ systemSymbol, waypointSymbol, token }) => superagent
 	.get(`${Root}/systems/${systemSymbol}/waypoints/${waypointSymbol}/shipyard`)
 	.use(throttle.plugin(undefined))
+	.auth(token, { type: "bearer" })
 	.accept("json");
 
 /* DIV */

@@ -17,6 +17,7 @@
 	import ShowSystems from "./components/systems/ShowSystems.svelte";
 	import ShowWaypoint from "./components/systems/ShowWaypoint.svelte";
 
+	import { page, pageSet } from "./stores/page";
 	import { ships } from "./stores/ships";
 	import { contracts } from "./stores/contracts";
 	import { token, agent, surveys, systems } from "./stores/store";
@@ -25,6 +26,7 @@
 
 	let show;
 	let selected = "Ships";
+	let back;
 	let waypointData;
 
 	const onConnect = (x) => {
@@ -50,10 +52,16 @@
 		$contracts = x?.body?.data ?? []
 	};
 	const onClick = (s) => {
-		selected = s;
+		$page = pageSet($page, { selected: s });
 	};
 	const credFormat = (ag) =>
 		`(${ag?.credits?.toLocaleString?.("en-US") ?? "?"})`;
+
+	$: {
+		back = $page.back;
+		waypointData = $page.waypointData;
+		selected = $page.selected;
+	}
 </script>
 
 <main class="container">
@@ -89,10 +97,6 @@
 		<div class:is-hidden={selected !== "Systems"}>
 			<ShowSystems
 				showTitle={true}
-				on:waypoint={(e) => {
-					waypointData = e.detail;
-					selected = "Waypoint";
-				}}
 			/>
 		</div>
 

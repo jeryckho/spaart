@@ -14,3 +14,8 @@ export const shipsSet = produce((draft, symbol, item, all = false) => {
 		}
 	}
 });
+
+export const shipsAdd = produce((draft, item) => {
+	// @ts-ignore
+	draft.push(item);
+});

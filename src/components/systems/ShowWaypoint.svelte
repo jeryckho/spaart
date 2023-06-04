@@ -4,10 +4,12 @@
 	import Copy from "../Copy.svelte";
 	import Show from "../Show.svelte";
 	import Market from './Market.svelte';
+	import Shipyard from "./Shipyard.svelte";
 
 	import { getWaypoint } from "../../lib/api";
 
 	import { token } from "../../stores/store";
+	import { page, pageSet } from "../../stores/page";
 	import {
 		waypoints,
 		waypointsPut,
@@ -36,6 +38,7 @@
 	$: WPTraits = Waypoint?.traits.map(t=>t.symbol) ?? [];
 	$: hasMarket = WPTraits.includes("MARKETPLACE");
 	$: hasShipyard = WPTraits.includes("SHIPYARD");
+	$: back = $page?.back
 </script>
 
 <div class="panel">
@@ -52,6 +55,16 @@
 					<i class="fa fa-refresh" />
 				</span>
 			</button>
+			{#if back}
+				<button
+					class="button is-small is-rounded"
+					on:click={() => { $page = pageSet($page, { selected: back })}}
+				>
+					<span class="icon is-small">
+						<i class="fa fa-hand-o-left" />
+					</span>
+				</button>
+			{/if}
 		</div>
 	{/if}
 
@@ -82,7 +95,7 @@
 {/if}
 
 {#if hasShipyard}
-	<Market {systemSymbol} {waypointSymbol}/>
+	<Shipyard {systemSymbol} {waypointSymbol}/>
 {/if}
 
 <Show value={err} />

@@ -6,6 +6,7 @@
 	export let type = "Buy";
 	export let max = 1000;
 	export let value = undefined;
+	export let showRange = true;
 </script>
 
 <div class="buttons has-addons">
@@ -20,11 +21,13 @@
 	>
 		{type}
 	</button>
-	<input
-		class="button is-small is-rounded"
-		type="number"
-		min="0"
-		{max}
-		bind:value={value}
-	/>
+	{#if showRange}
+		<input
+			class="button is-small is-rounded"
+			type="number"
+			min="0"
+			{max}
+			bind:value={value}
+		/>
+	{/if}
 </div>

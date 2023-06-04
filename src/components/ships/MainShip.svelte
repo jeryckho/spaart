@@ -20,6 +20,7 @@
 	import { token, agent, keepers, surveys } from "../../stores/store";
 	import { ships, shipsSet } from "../../stores/ships";
 	import { contracts, contractsSet } from "../../stores/contracts";
+	import { page, pageSet } from "../../stores/page";
 
 	export let symbol;
 
@@ -35,6 +36,14 @@
 	let Cooldown;
 	let Coolmove;
 	let showCargo = false;
+
+	const onWaypoint = ({ systemSymbol, waypointSymbol }) => {
+		$page = pageSet($page, {
+			selected: "Waypoint",
+			back: "Ships",
+			waypointData: { systemSymbol, waypointSymbol }
+		});
+	};
 
 	const timeDiff = (dStart, dEnd) =>
 		Math.floor((dEnd.getTime() - dStart.getTime()) / 1000);
@@ -406,9 +415,48 @@
 
 <div class="panel-block">
 	Position :&nbsp;{#if ship.nav.status === "IN_TRANSIT"}
-		<Copy value={ship.nav.route.departure.symbol} /> =&gt;
+		<button
+			class="button is-small is-rounded"
+			on:click={() => {
+				onWaypoint({
+					systemSymbol: ship.nav.route.departure.systemSymbol,
+					waypointSymbol: ship.nav.route.departure.symbol,
+				});
+			}}
+		>
+			<span class="icon is-small">
+				<i class="fa fa-eye" />
+			</span>
+		</button>
+		<Copy value={ship.nav.route.departure.symbol} />&nbsp;=&gt;&nbsp;
+		<button
+			class="button is-small is-rounded"
+			on:click={() => {
+				onWaypoint({
+					systemSymbol: ship.nav.route.destination.systemSymbol,
+					waypointSymbol: ship.nav.route.destination.symbol,
+				});
+			}}
+		>
+			<span class="icon is-small">
+				<i class="fa fa-eye" />
+			</span>
+		</button>
 		<Copy value={ship.nav.route.destination.symbol} />
 	{:else}
+		<button
+			class="button is-small is-rounded"
+			on:click={() => {
+				onWaypoint({
+					systemSymbol: ship.nav.systemSymbol,
+					waypointSymbol: ship.nav.waypointSymbol,
+				});
+			}}
+		>
+			<span class="icon is-small">
+				<i class="fa fa-eye" />
+			</span>
+		</button>
 		<Copy value={ship.nav.waypointSymbol} /> &nbsp;
 		<div class="buttons has-addons">
 			{#if !hideDest}
@@ -456,138 +504,142 @@
 	{/if}
 </div>
 
-<div class="panel-block">
-	Fuel : {ship.fuel.current} / {ship.fuel.capacity} &nbsp;
-	<button
-		class="button is-small is-rounded is-info"
-		disabled={ship.nav.status !== "DOCKED"}
-		on:click={onFuel}
-	>
-		<span class="icon is-small">
-			<i
-				class={`fa fa-battery-${
-					["empty", "quarter", "half", "three-quarters", "full"][
-						Math.round((4 * ship.fuel.current) / ship.fuel.capacity)
-					]
-				}`}
-			/>
-		</span>
-	</button>
-</div>
-
-<div class="panel-block">
-	<button
-		class="button is-small is-rounded"
-		on:click={() => {
-			showCargo = !showCargo;
-		}}
-	>
-		<span class="icon is-small">
-			<i class={`fa fa-${showCargo ? "angle-down" : "angle-right"}`} />
-		</span>
-	</button>
-	&nbsp; Cargo : {ship.cargo.units} / {ship.cargo.capacity} &nbsp;
-	<button class="button is-small is-rounded" on:click={onCargo}>
-		<span class="icon is-small">
-			<i class="fa fa-refresh" />
-		</span>
-	</button>
-</div>
-
-{#if showCargo}
+{#if ship.fuel.capacity > 0}
 	<div class="panel-block">
-		<table class="table">
-			<tbody>
-				{#each ship.cargo.inventory as item}
-					<tr>
-						<td>
-							{#if $keepers.includes(item.symbol)}
-								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<span
-									class="icon has-text-danger"
-									on:click={() => {
-										$keepers = $keepers.filter(
-											(k) => k !== item.symbol
-										);
-									}}
-								>
-									<i class="fa fa-ban" />
-								</span>
-							{:else}
-								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<span
-									class="icon has-text-success"
-									on:click={() => {
-										$keepers = [...$keepers, item.symbol];
-									}}
-								>
-									<i class="fa fa-shopping-cart" />
-								</span>
-							{/if}
-						</td>
-						<td>{item.symbol}</td>
-						<td>:</td>
-						<td>{item.units}</td>
-						<td>
-							<div class="buttons has-addons">
-								{#if ship.nav.status === "DOCKED"}
-									{#if !$keepers.includes(item.symbol)}
-										<button
-											class="button is-small is-rounded is-warning"
-											type="button"
-											on:click={() =>
-												onSell({
-													symbol: item.symbol,
-													units: item.units,
-												})}>Sell</button
-										>
-									{/if}
-									{#each $contracts.filter((v) => v.terms.deliver.some((d) => d.destinationSymbol === ship.nav.waypointSymbol && d.tradeSymbol === item.symbol) && v.accepted && !v.fulfilled) as Contract}
-										<button
-											class="button is-small is-rounded is-warning"
-											type="button"
-											on:click={() =>
-												onDeliver({
-													tradeSymbol: item.symbol,
-													units: item.units,
-													contractId: Contract.id,
-												})}>Deliver</button
-										>
-									{/each}
-								{/if}
-								{#if near.length}
-									<button
-										class="button is-small is-rounded is-info"
-										type="button"
-										on:click={() =>
-											onXfr({
-												tradeSymbol: item.symbol,
-												units: item.units,
-												shipDestSymbol: selXfr,
-											})}>Transfer</button
-									>
-								{/if}
-							</div>
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
+		Fuel : {ship.fuel.current} / {ship.fuel.capacity} &nbsp;
+		<button
+			class="button is-small is-rounded is-info"
+			disabled={ship.nav.status !== "DOCKED"}
+			on:click={onFuel}
+		>
+			<span class="icon is-small">
+				<i
+					class={`fa fa-battery-${
+						["empty", "quarter", "half", "three-quarters", "full"][
+							Math.round((4 * ship.fuel.current) / ship.fuel.capacity)
+						]
+					}`}
+				/>
+			</span>
+		</button>
+	</div>
+{/if}
+
+{#if ship.cargo.capacity > 0}
+	<div class="panel-block">
+		<button
+			class="button is-small is-rounded"
+			on:click={() => {
+				showCargo = !showCargo;
+			}}
+		>
+			<span class="icon is-small">
+				<i class={`fa fa-${showCargo ? "angle-down" : "angle-right"}`} />
+			</span>
+		</button>
+		&nbsp; Cargo : {ship.cargo.units} / {ship.cargo.capacity} &nbsp;
+		<button class="button is-small is-rounded" on:click={onCargo}>
+			<span class="icon is-small">
+				<i class="fa fa-refresh" />
+			</span>
+		</button>
 	</div>
 
-	{#if near.length && ship.cargo.inventory.length}
-		<div class="panel-block" class:is-hidden={near.length < 2}>
-			Transfer : &nbsp; <select
-				class="button is-small is-rounded"
-				bind:value={selXfr}
-			>
-				{#each near as other}
-					<option value={other.symbol}>
-						{other.symbol}
-					</option>
-				{/each}</select
-			>
+	{#if showCargo}
+		<div class="panel-block">
+			<table class="table">
+				<tbody>
+					{#each ship.cargo.inventory as item}
+						<tr>
+							<td>
+								{#if $keepers.includes(item.symbol)}
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<span
+										class="icon has-text-danger"
+										on:click={() => {
+											$keepers = $keepers.filter(
+												(k) => k !== item.symbol
+											);
+										}}
+									>
+										<i class="fa fa-ban" />
+									</span>
+								{:else}
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<span
+										class="icon has-text-success"
+										on:click={() => {
+											$keepers = [...$keepers, item.symbol];
+										}}
+									>
+										<i class="fa fa-shopping-cart" />
+									</span>
+								{/if}
+							</td>
+							<td>{item.symbol}</td>
+							<td>:</td>
+							<td>{item.units}</td>
+							<td>
+								<div class="buttons has-addons">
+									{#if ship.nav.status === "DOCKED"}
+										{#if !$keepers.includes(item.symbol)}
+											<button
+												class="button is-small is-rounded is-warning"
+												type="button"
+												on:click={() =>
+													onSell({
+														symbol: item.symbol,
+														units: item.units,
+													})}>Sell</button
+											>
+										{/if}
+										{#each $contracts.filter((v) => v.terms.deliver.some((d) => d.destinationSymbol === ship.nav.waypointSymbol && d.tradeSymbol === item.symbol) && v.accepted && !v.fulfilled) as Contract}
+											<button
+												class="button is-small is-rounded is-warning"
+												type="button"
+												on:click={() =>
+													onDeliver({
+														tradeSymbol: item.symbol,
+														units: item.units,
+														contractId: Contract.id,
+													})}>Deliver</button
+											>
+										{/each}
+									{/if}
+									{#if near.length}
+										<button
+											class="button is-small is-rounded is-info"
+											type="button"
+											on:click={() =>
+												onXfr({
+													tradeSymbol: item.symbol,
+													units: item.units,
+													destShipSymbol: selXfr,
+												})}>Transfer</button
+										>
+									{/if}
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		</div>
+
+		{#if near.length && ship.cargo.inventory.length}
+			<div class="panel-block" class:is-hidden={near.length < 2}>
+				Transfer : &nbsp; <select
+					class="button is-small is-rounded"
+					bind:value={selXfr}
+				>
+					{#each near as other}
+						<option value={other.symbol}>
+							{other.symbol}
+						</option>
+					{/each}</select
+				>
+			</div>
+		{/if}
 	{/if}
 {/if}
 

@@ -1,7 +1,4 @@
 <script>
-	import { createEventDispatcher } from "svelte";
-	const dispatch = createEventDispatcher();
-
 	import ImportantTraits from "./ImportantTraits.svelte";
 	import Pagination from "./Pagination.svelte";
 	import Show from "../Show.svelte";
@@ -9,6 +6,7 @@
 
 	import { listSystems, listWaypoints } from "../../lib/api";
 
+	import { page, pageSet } from "../../stores/page";
 	import { token, systems, lastSystems } from "../../stores/store";
 	import {
 		waypoints,
@@ -18,8 +16,12 @@
 	export let showTitle = false;
 
 	let err;
-	const onWaypoint = (data) => {
-		dispatch("waypoint", data);
+	const onWaypoint = ({ systemSymbol, waypointSymbol }) => {
+		$page = pageSet($page, {
+			selected: "Waypoint",
+			back: "Systems",
+			waypointData: { systemSymbol, waypointSymbol }
+		});
 	};
 
 	const onListSystems = async (data) => {
