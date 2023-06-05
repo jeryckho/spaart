@@ -1,4 +1,6 @@
 <script>
+  import HullShip from './HullShip.svelte';
+
 	import ContractShips from './ContractShips.svelte';
 	import MainShip from './MainShip.svelte';
 	import Market from '../systems/Market.svelte';
@@ -34,7 +36,7 @@
 </script>
 
 <div class="panel-heading">
-	{symbol} &nbsp;
+	{symbol} <span class="is-italic is-size-7">{ship.registration.role}</span>&nbsp;
 	<button class="button is-small is-rounded" on:click={onShip}>
 		<span class="icon is-small">
 			<i class="fa-solid fa-refresh" />
@@ -54,9 +56,7 @@
 </div>
 
 <div class:is-hidden={subMenu !== "Hull"}>
-	<div class="panel-block">
-		Hull
-	</div>
+	<HullShip {symbol} />
 </div>
 
 <div class:is-hidden={subMenu !== "Market"}>

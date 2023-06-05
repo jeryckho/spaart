@@ -24,6 +24,7 @@
 	import { token, agent, surveys, systems } from "./stores/store";
 
 	import { registerNewAgent } from "./lib/api";
+    import InitSequence from "./components/InitSequence.svelte";
 
 	let show;
 	let selected = "Ships";
@@ -87,11 +88,13 @@
 		</div>
 
 		<div class:is-hidden={selected !== "Misc"}>
+			<nav class="panel">
+				<div class="panel-heading">
+					Init <InitSequence />
+				</div>
+			</nav>			
 			<ShowAgent />
-			<CustomQuery />
-			<ListShips {onListShips} />
-			<ListContracts {onListContracts} />
-			<Status {onStatus} />
+			<CustomQuery />			
 			<Show value={show} />
 		</div>
 

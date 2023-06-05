@@ -15,12 +15,16 @@
 		getShip,
 		createSurvey,
 		refuelShip,
+		purchaseCargo,
+		listWaypoints,
+		getMarket,
 	} from "../../lib/api";
 
 	import { token, agent, keepers, surveys } from "../../stores/store";
 	import { ships, shipsSet } from "../../stores/ships";
 	import { contracts, contractsSet } from "../../stores/contracts";
 	import { page, pageSet } from "../../stores/page";
+	import { waypoints, waypointsMod, waypointsSet } from "../../stores/waypoints";
 
 	export let symbol;
 
@@ -208,10 +212,10 @@
 		}
 	};
 
-	const onNavigate = async (data) => {
+	const onNavigate = async ({waypointSymbol, avoidUpdate=false}) => {
 		try {
 			const done = await navigateShip({
-				...data,
+				waypointSymbol,
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
@@ -220,6 +224,9 @@
 				nav: done?.body?.data?.nav,
 			});
 			setCoolmove(done?.body?.data?.nav?.route);
+			if (avoidUpdate === false) {
+				setTimeout(onShip, 1000*Coolmove.remainingSeconds);
+			}
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -242,6 +249,45 @@
 			err = error?.response?.body;
 		}
 	};
+	const onBuy = async (data) => {
+		try {
+			const done = await purchaseCargo({
+				...data,
+				shipSymbol: ship.symbol,
+				token: $token,
+			});
+			$ships = shipsSet($ships, ship.symbol, { cargo: done?.body?.data?.cargo });
+			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
+		} catch (error) {
+			err = error?.response?.body;
+		}
+	};
+	const onWPSystems = async (data) => {
+		try {
+			const done = await listWaypoints({
+				...data,
+				limit: 20,
+				token: $token,
+			});
+			$waypoints = waypointsSet($waypoints, done?.body?.data);
+		} catch (error) {
+			err = error?.response?.body;
+		}
+	};
+	const onMarket = async ({systemSymbol, waypointSymbol}) => {
+		try {
+			const done = await getMarket({
+				systemSymbol,
+				waypointSymbol,
+				token: $token,
+			});
+			$waypoints = waypointsMod($waypoints, waypointSymbol, {
+				market: done?.body?.data,
+			});
+		} catch (error) {
+			err = error?.response?.body;
+		}
+	};
 
 	const onAction = async () => {
 		switch (mission) {
@@ -255,6 +301,13 @@
 				break;
 			case "Extract_Sell":
 				await onExtractSell();
+				break;
+			case "AutoDeliver":
+				await onBuyMoveDeliverBack();
+				break;
+			case "UpdateMarkets":
+				await onUpdateMarkets();
+				break;
 			default:
 				break;
 		}
@@ -277,12 +330,81 @@
 		}
 	};
 
+	const sleep = s => new Promise(r => setTimeout(r, 1000*s));
+	const onBuyMoveDeliverBack = async () => {
+		try {
+			let Context = JSON.parse(iCtx);
+			while (true) {
+				const Prev = err;
+				await onDock();
+				if (mission!="AutoDeliver" || Prev != err) break;
+				await onBuy({
+					units: ship.cargo.capacity - ship.cargo.units,
+					symbol: Context?.From?.What
+				});
+				if (mission!="AutoDeliver" || Prev != err) break;
+				await onNavigate({
+					waypointSymbol: Context?.To?.Where,
+					avoidUpdate: true
+				});
+				if (mission!="AutoDeliver" || Prev != err) break;
+				await sleep(Coolmove.remainingSeconds);
+				if (mission!="AutoDeliver" || Prev != err) break;
+				await onDock();
+				if (mission!="AutoDeliver" || Prev != err) break;
+				await onDeliver({
+					tradeSymbol: Context?.From?.What,
+					units: ship.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units,
+					contractId: $contracts.find((v) => v.terms.deliver.some((d) => d.destinationSymbol === ship.nav.waypointSymbol && d.tradeSymbol === Context?.From?.What) && v.accepted && !v.fulfilled).id,
+				});
+				if (mission!="AutoDeliver" || Prev != err) break;
+				await onNavigate({
+					waypointSymbol: Context?.From?.Where,
+					avoidUpdate: true
+				});
+				if (mission!="AutoDeliver" || Prev != err) break;
+				await sleep(Coolmove.remainingSeconds);
+				if (mission!="AutoDeliver" || Prev != err) break;
+			}
+		} catch (error) {
+			err = error;
+		}
+	}
+
+	const onUpdateMarkets = async () => {
+		try {
+			await onWPSystems({
+				token:$token,
+				systemSymbol: ship.nav.systemSymbol,
+				page: 1,
+				limit: 20
+			});
+			const Markets = Object.values($waypoints).filter((wp)=> wp.systemSymbol === ship.nav.systemSymbol  && wp.traits.map(t=>t.symbol).includes("MARKETPLACE"));
+			while (true) {
+				const Prev = err;
+				for (const Market of Markets) {
+					await onNavigate({
+						waypointSymbol: Market.symbol,
+						avoidUpdate: true
+					});
+					if (mission!="UpdateMarkets" || Prev != err) break;
+					await sleep(Coolmove.remainingSeconds);
+					if (mission!="UpdateMarkets" || Prev != err) break;
+					await onMarket({
+						waypointSymbol: ship.nav.waypointSymbol,
+						systemSymbol: ship.nav.systemSymbol
+					});
+					if (mission!="UpdateMarkets" || Prev != err) break;					
+				}
+			}
+		} catch (error) {
+			err = error;
+		}
+	}
+
 	const majTime = (t) => {
 		if (Coolmove?.remainingSeconds && Coolmove?.remainingSeconds > 0) {
 			Coolmove.remainingSeconds--;
-			if (Coolmove.remainingSeconds === 0) {
-				onShip();
-			}
 		}
 		if (Cooldown?.remainingSeconds && Cooldown?.remainingSeconds > 0) {
 			Cooldown.remainingSeconds--;
@@ -370,7 +492,7 @@
 	Actions : &nbsp;
 	<div class="buttons has-addons">
 		<select class="button is-small is-rounded" bind:value={mission}>
-			{#each ["Extract_Once", "Extract_Max", "Extract_Sell", "Survey", "Survey_All"] as action}
+			{#each ["Extract_Once", "Extract_Max", "Extract_Sell", "Survey", "Survey_All", "AutoDeliver", "UpdateMarkets"] as action}
 				<option value={action}>
 					{action}
 				</option>
@@ -503,6 +625,7 @@
 					} else {
 						hideDest = true;
 						if (iDest) onNavigate({ waypointSymbol: iDest });
+						iDest = undefined;
 					}
 				}}
 			>
