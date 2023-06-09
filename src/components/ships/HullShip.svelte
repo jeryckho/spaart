@@ -1,10 +1,11 @@
+<script context="module">
+	import { ships } from "../../stores/store";
+</script>
 <script>
-	import { ships } from "../../stores/ships";
-
 	export let symbol;
 	let ship;
 
-	$: ship = $ships.find((current) => current.symbol === symbol);
+	$: ship = $ships?.[symbol];
 	$: Frame = ship?.frame;
 	$: Reactor = ship?.reactor;
 	$: Engine = ship?.engine;
@@ -16,21 +17,21 @@
 	<span class="icon is-small">
 		<i class="fa-solid fa-user-astronaut" />
 	</span> &nbsp; 
-	<span title={Frame.description}>{Frame.symbol}</span>
+	<span title={Frame.description}>{Frame.symbol}</span> &nbsp; {JSON.stringify(Frame,null,1)}
 </div>
 
 <div class="panel-block">
 	<span class="icon is-small">
 		<i class="fa-solid fa-bolt" />
 	</span> &nbsp; 
-	<span title={Reactor.description}>{Reactor.symbol}</span>
+	<span title={Reactor.description}>{Reactor.symbol}</span> &nbsp; {JSON.stringify(Reactor,null,1)}
 </div>
 
 <div class="panel-block">
 	<span class="icon is-small">
 		<i class="fa-solid fa-fire-flame-simple" />
 	</span> &nbsp; 
-	<span title={Engine.description}>{Engine.symbol}</span>
+	<span title={Engine.description}>{Engine.symbol}</span> &nbsp; {JSON.stringify(Engine,null,1)}
 </div>
 
 {#each Modules as Module}
@@ -38,7 +39,7 @@
 		<span class="icon is-small">
 			<i class="fa-solid fa-box" />
 		</span> &nbsp; 
-		<span title={Module.description}>{Module.symbol}</span> ({Module.requirements.slots}/{Frame.moduleSlots})
+		<span title={Module.description}>{Module.symbol}</span> &nbsp; ({Module.requirements.slots}/{Frame.moduleSlots}) &nbsp; {JSON.stringify(Module,null,1)}
 	</div>	
 {/each}
 
@@ -47,6 +48,6 @@
 		<span class="icon is-small">
 			<i class="fa-solid fa-cubes" />
 		</span> &nbsp; 
-		<span title={Mount.description}>{Mount.symbol}</span> ({Mount.requirements.slots ?? 1}/{Frame.mountingPoints})
+		<span title={Mount.description}>{Mount.symbol}</span> &nbsp; ({Mount.requirements.slots ?? 1}/{Frame.mountingPoints}) &nbsp; {JSON.stringify(Mount,null,1)}
 	</div>	
 {/each}

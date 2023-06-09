@@ -1,6 +1,8 @@
+<script context="module">
+	import { queries, token } from "../stores/store";
+</script>
 <script>
    import { customQuery } from "../lib/api";
-	import { queries, token } from "../stores/store";
 
 	let toLoad;
 
@@ -44,7 +46,7 @@
 			class="button is-small is-rounded is-link"
 			bind:value={Query.Method}
 		>
-			{#each ["GET", "POST", "PATCH", "PUT", "DELETE"] as Method}
+			{#each ["GET", "POST", "PATCH", "PUT", "DELETE"] as Method (Method)}
 				<option value={Method}>
 					{Method}
 				</option>
@@ -154,7 +156,7 @@
 			Load
 			</button>
 			<select class="button is-small is-rounded" bind:value={toLoad}>
-				{#each Object.keys($queries).sort() as action}
+				{#each Object.keys($queries).sort() as action (action)}
 					<option value={action}>
 						{action}
 					</option>

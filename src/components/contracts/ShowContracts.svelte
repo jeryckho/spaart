@@ -1,6 +1,8 @@
+<script context="module">
+	import { token, agent, contracts } from "../../stores/store";
+	import { IArrayReplace } from "../../stores/utils";
+</script>
 <script>
-	import { contracts, contractsSet } from "../../stores/contracts";
-	import { token, agent } from "../../stores/store";
 	import {
 		listContracts,
 		fulfillContract,
@@ -31,12 +33,7 @@
 				...data,
 				token: $token,
 			});
-			$contracts = contractsSet(
-				$contracts,
-				data.contractId,
-				done?.body?.data?.contract,
-				true
-			);
+			$contracts = IArrayReplace($contracts, data.contractId, done?.body?.data?.contract, "id");
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
 		} catch (error) {
 			err = error?.response?.body;
@@ -49,12 +46,7 @@
 				...data,
 				token: $token,
 			});
-			$contracts = contractsSet(
-				$contracts,
-				data.contractId,
-				done?.body?.data?.contract,
-				true
-			);
+			$contracts = IArrayReplace($contracts, data.contractId, done?.body?.data?.contract, "id");
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
 		} catch (error) {
 			err = error?.response?.body;
@@ -88,7 +80,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each $contracts as contract}
+			{#each $contracts as contract (contract.id)}
 				<tr>
 					<!-- <td>{contract.factionSymbol}</td> -->
 					<td>{contract.type}</td>

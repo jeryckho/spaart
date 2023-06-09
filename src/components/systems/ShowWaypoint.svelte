@@ -1,20 +1,16 @@
+<script context="module">
+	import { token, page, waypoints } from "../../stores/store";
+	import { IHashAdd, IObjectPatch } from "../../stores/utils";
+</script>
+
 <script>
-	// import ImportantTraits from "./ImportantTraits.svelte";
-	// import Pagination from "./Pagination.svelte";
 	import Copy from "../Copy.svelte";
 	import Show from "../Show.svelte";
 	import Market from './Market.svelte';
 	import Shipyard from "./Shipyard.svelte";
+   import Trait from "./Trait.svelte";
 
 	import { getWaypoint } from "../../lib/api";
-
-	import { token } from "../../stores/store";
-	import { page, pageSet } from "../../stores/page";
-	import {
-		waypoints,
-		waypointsPut,
-	} from "../../stores/waypoints";
-   import Trait from "./Trait.svelte";
 
 	export let showTitle = false;
 	export let systemSymbol;
@@ -28,7 +24,7 @@
 				...data,
 				token: $token,
 			});
-			$waypoints = waypointsPut($waypoints, done?.body?.data);
+			$waypoints = IHashAdd($waypoints, [done?.body?.data]);
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -58,7 +54,7 @@
 			{#if back}
 				<button
 					class="button is-small is-rounded"
-					on:click={() => { $page = pageSet($page, { selected: back })}}
+					on:click={() => { $page = IObjectPatch($page, { selected: back })}}
 				>
 					<span class="icon is-small">
 						<i class="fa-solid fa-backward" />

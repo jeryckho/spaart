@@ -1,4 +1,11 @@
+<script context="module">
+	import { token, systems, lastSystems, page, waypoints  } from "../../stores/store";
+	import { IHashAdd, IObjectPatch } from "../../stores/utils";
+</script>
+
 <script>
+	import jsonata from "jsonata";
+
 	import ImportantTraits from "./ImportantTraits.svelte";
 	import Pagination from "./Pagination.svelte";
 	import Show from "../Show.svelte";
@@ -6,18 +13,13 @@
 
 	import { listSystems, listWaypoints } from "../../lib/api";
 
-	import { page, pageSet } from "../../stores/page";
-	import { token, systems, lastSystems } from "../../stores/store";
-	import {
-		waypoints,
-		waypointsSet,
-	} from "../../stores/waypoints";
-
 	export let showTitle = false;
 
+	let Search;
+	let Found = [];
 	let err;
 	const onWaypoint = ({ systemSymbol, waypointSymbol }) => {
-		$page = pageSet($page, {
+		$page = IObjectPatch($page, {
 			selected: "Waypoint",
 			back: "Systems",
 			waypointData: { systemSymbol, waypointSymbol }
@@ -48,11 +50,20 @@
 				limit: 20,
 				token: $token,
 			});
-			$waypoints = waypointsSet($waypoints, done?.body?.data);
+			$waypoints = IHashAdd($waypoints, done?.body?.data);
 		} catch (error) {
 			err = error?.response?.body;
 		}
 	};
+
+	const TrySearch = (term) => {
+		if (term) {
+			jsonata(`[$[**.symbol~>/${term}/i or **.type~>/${term}/i].symbol]`)
+				.evaluate(Object.values($waypoints))
+				.then((res) => Found = res)
+				.catch(()=> Found = []);
+		} else { Found = []; }
+	}
 
 	// @ts-ignore
 	$: Systems = $lastSystems?.data ?? [];
@@ -70,6 +81,15 @@
 		</button>
 	</div>
 {/if}
+
+<div class="panel-block">
+	<p class="control has-icons-left">
+	  <input class="input" type="text" placeholder="Search" bind:value={Search} on:blur={()=>TrySearch(Search)}>
+	  <span class="icon is-left">
+		 <i class="fa-solid fa-search"></i>
+	  </span>
+	</p>
+ </div>
 
 <div class="panel-block">
 	<table class="table is-narrow">
@@ -104,33 +124,35 @@
 						<table class="table is-narrow">
 							<tbody>
 								{#each system.waypoints as waypoint}
-									<tr>
-										<td>
-											<button
-												class="button is-small is-rounded"
-												on:click={() => {
-													onWaypoint({
-														systemSymbol: system.symbol,
-														waypointSymbol: waypoint.symbol,
-													});
-												}}
+									{#if Found.length == 0 || Found.includes(waypoint.symbol)}
+										<tr>
+											<td>
+												<button
+													class="button is-small is-rounded"
+													on:click={() => {
+														onWaypoint({
+															systemSymbol: system.symbol,
+															waypointSymbol: waypoint.symbol,
+														});
+													}}
+												>
+													<span class="icon is-small">
+														<i class="fa-solid fa-eye" />
+													</span>
+												</button>
+												<Copy value={waypoint.symbol} /></td
 											>
-												<span class="icon is-small">
-													<i class="fa-solid fa-eye" />
-												</span>
-											</button>
-											<Copy value={waypoint.symbol} /></td
-										>
-										<td>{waypoint.type}</td>
-										<td>{`[${waypoint.x},${waypoint.y}]`}</td>
-										<td>
-											{#if waypoint.symbol in $waypoints}
-												<ImportantTraits
-													waypointSymbol={waypoint.symbol}
-												/>
-											{/if}
-										</td>
-									</tr>
+											<td>{waypoint.type}</td>
+											<td>{`[${waypoint.x},${waypoint.y}]`}</td>
+											<td>
+												{#if waypoint.symbol in $waypoints}
+													<ImportantTraits
+														waypointSymbol={waypoint.symbol}
+													/>
+												{/if}
+											</td>
+										</tr>										
+									{/if}
 								{/each}
 							</tbody>
 						</table>

@@ -1,7 +1,8 @@
+<script context="module">
+	import { token, ships, contracts } from "../../stores/store";
+</script>
+
 <script>
-	import { token } from "../../stores/store";
-	import { ships } from "../../stores/ships";
-	import { contracts } from "../../stores/contracts";
 	import { negotiateContract } from "../../lib/api";
 	import Show from "../Show.svelte";
 	import ShowContracts from "../contracts/ShowContracts.svelte";
@@ -17,16 +18,16 @@
 				token: $token,
 			});
 			if (done?.body?.data?.contract)
-				$contracts = [...$contracts, done?.body?.data?.contract]
+				$contracts = [...$contracts, done?.body?.data?.contract];
 		} catch (error) {
 			err = error?.response?.body;
 		}
 	};
 
-	$: ship = $ships.find((current) => current.symbol === symbol);
+	$: ship = $ships?.[symbol];
 </script>
 
-<ShowContracts showTitle={true}/>
+<ShowContracts showTitle={true} />
 <div class="panel-block">
 	New contract : &nbsp; <button
 		class="button is-small is-rounded is-success"

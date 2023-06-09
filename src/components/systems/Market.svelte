@@ -1,11 +1,12 @@
+<script context="module">
+	import { token, keepers, agent,ships, waypoints } from "../../stores/store";
+	import { IHashPatch } from "../../stores/utils";
+</script>
+
 <script>
   import BuySell from './BuySell.svelte';
 
 	import { getMarket, sellCargo, purchaseCargo } from "../../lib/api";
-
-	import { ships, shipsSet } from "../../stores/ships";
-	import { token, keepers, agent } from "../../stores/store";
-	import { waypoints, waypointsMod } from "../../stores/waypoints";
 
 	export let systemSymbol;
 	export let waypointSymbol;
@@ -13,6 +14,7 @@
 	export let showTitle = true;
 
 	let err;
+	let  Detail;
 
 	const onMarket = async (data) => {
 		try {
@@ -20,7 +22,7 @@
 				...data,
 				token: $token,
 			});
-			$waypoints = waypointsMod($waypoints, waypointSymbol, {
+			$waypoints = IHashPatch($waypoints, waypointSymbol, {
 				market: done?.body?.data,
 			});
 		} catch (error) {
@@ -35,7 +37,7 @@
 				shipSymbol: Ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, Ship.symbol, { cargo: done?.body?.data?.cargo });
+			$ships = IHashPatch($ships, Ship.symbol, { cargo: done?.body?.data?.cargo });
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
 		} catch (error) {
 			err = error?.response?.body;
@@ -49,13 +51,12 @@
 				shipSymbol: Ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, Ship.symbol, { cargo: done?.body?.data?.cargo });
+			$ships = IHashPatch($ships, Ship.symbol, { cargo: done?.body?.data?.cargo });
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
 		} catch (error) {
 			err = error?.response?.body;
 		}
 	};
-
 
 	$: Waypoint = $waypoints?.[waypointSymbol];
 	$: Market = Waypoint?.market;
@@ -64,8 +65,13 @@
 	$: Imports = Market?.imports.map((i) => i.symbol) ?? [];
 	$: Exports = Market?.exports.map((i) => i.symbol) ?? [];
 	$: Exchange = Market?.exchange.map((i) => i.symbol) ?? [];
+	$: {
+		Detail = Market?.imports.reduce((acc, imp) => (acc[imp.symbol] = imp, acc), {});
+		Detail = Market?.exports.reduce((acc, imp) => (acc[imp.symbol] = imp, acc), Detail);
+		Detail = Market?.exchange.reduce((acc, imp) => (acc[imp.symbol] = imp, acc), Detail);
+	}
 	$: All = Array.from(new Set([...Imports, ...Exports, ...Exchange])).sort((a, b) => a > b ? 1 : -1);
-	$: Ship = $ships.find((current) => current.symbol === shipSymbol);
+	$: Ship = $ships?.[shipSymbol];
 </script>
 
 <div class="panel">
@@ -116,7 +122,7 @@
 									</span>
 								{/if}
 							</td>
-							<td>{symbol}</td>
+							<td title={Detail[symbol].description}>{symbol}</td>
 							{#if Ship && Ship.nav.status === "DOCKED"}
 								<td>
 									{#each Ship.cargo.inventory.filter(i=>i.symbol===symbol) as Cargo}
@@ -180,7 +186,7 @@
 										</span>
 									{/if}
 								</td>
-								<td>{item}</td>
+								<td title={Detail[item].description}>{item}</td>
 								<td>
 									{#if (Imports.includes(item) || Exchange.includes(item))}
 										<span class="icon">

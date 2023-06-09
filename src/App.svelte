@@ -3,28 +3,22 @@
 	import "./assets/fontawesome/css/fontawesome.css";
 	import "./assets/fontawesome/css/solid.css";
 
-	// import Show from "./components/Show.svelte";
 	import Connect from "./components/connect/Connect.svelte";
 	import CustomQuery from "./components/CustomQuery.svelte";
+	import InitSequence from "./components/InitSequence.svelte";
 	import LevelItem from "./components/LevelItem.svelte";
-	import ListContracts from "./components/contracts/ListContracts.svelte";
-	import ListShips from "./components/ships/ListShips.svelte";
 	import Register from "./components/connect/Register.svelte";
+	import ScreenShips from './components/ships/ScreenShips.svelte';
 	import Show from "./components/Show.svelte";
-	import ShowShip from "./components/ships/ShowShip.svelte";
-	import Status from "./components/Status.svelte";
 	import ShowAgent from "./components/ShowAgent.svelte";
 	import ShowSurveys from "./components/ShowSurveys.svelte";
 	import ShowSystems from "./components/systems/ShowSystems.svelte";
 	import ShowWaypoint from "./components/systems/ShowWaypoint.svelte";
 
-	import { page, pageSet } from "./stores/page";
-	import { ships } from "./stores/ships";
-	import { contracts } from "./stores/contracts";
-	import { token, agent, surveys, systems } from "./stores/store";
+	import { agent, page, ships, surveys, systems, token } from "./stores/store";
+	import { IObjectPatch } from "./stores/utils";
 
 	import { registerNewAgent } from "./lib/api";
-    import InitSequence from "./components/InitSequence.svelte";
 
 	let show;
 	let selected = "Ships";
@@ -44,17 +38,8 @@
 		}
 	}
 
-	const onStatus = (x) => {
-		show = x;
-	};
-	const onListShips = (x) => {
-		$ships = x?.body?.data ?? [];
-	};
-	const onListContracts = (x) => {
-		$contracts = x?.body?.data ?? []
-	};
 	const onClick = (s) => {
-		$page = pageSet($page, { selected: s });
+		$page = IObjectPatch($page, { selected: s });
 	};
 	const credFormat = (ag) =>
 		`(${ag?.credits?.toLocaleString?.("en-US") ?? "?"})`;
@@ -69,7 +54,7 @@
 <main class="container">
 	{#if $token}
 		<nav class="level">
-			<LevelItem item="Ships" detail={`(${$ships.length})`} {onClick} />
+			<LevelItem item="Ships" detail={`(${Object.keys($ships).length})`} {onClick} />
 			<LevelItem item="Surveys" detail={`(${$surveys.length})`} {onClick} />
 			<LevelItem
 				item="Systems"
@@ -80,11 +65,7 @@
 		</nav>
 
 		<div class:is-hidden={selected !== "Ships"}>
-			{#each $ships as ship}
-				<nav class="panel">
-					<ShowShip symbol={ship.symbol} />
-				</nav>
-			{/each}
+			<ScreenShips />
 		</div>
 
 		<div class:is-hidden={selected !== "Misc"}>
@@ -94,7 +75,7 @@
 				</div>
 			</nav>			
 			<ShowAgent />
-			<CustomQuery />			
+			<CustomQuery />
 			<Show value={show} />
 		</div>
 

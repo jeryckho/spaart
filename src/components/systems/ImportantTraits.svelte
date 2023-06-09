@@ -1,7 +1,10 @@
-<script>
-  import Trait from './Trait.svelte';
+<script context="module">
+	import { waypoints } from "../../stores/store";
+</script>
 
-	import { waypoints } from "../../stores/waypoints";
+<script>
+	import Trait from "./Trait.svelte";
+
 	export let waypointSymbol;
 
 	$: waypoint = $waypoints[waypointSymbol];
@@ -13,6 +16,6 @@
 		<i class="fa-solid fa-map-marker" />
 	</span>
 	{#each traits as trait}
-		<Trait {trait} />	
+		<Trait {trait} />
 	{/each}
 </div>

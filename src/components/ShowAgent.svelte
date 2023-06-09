@@ -1,4 +1,6 @@
-<script>
+<script context="module">
+	
+</script><script>
 	import { agent } from "../stores/store";
 </script>
 

@@ -1,6 +1,4 @@
 <script>
-   import { type } from "superagent/lib/utils";
-
 	export let onClick = (_) => {};
 	export let subMenu;
 	export let name;

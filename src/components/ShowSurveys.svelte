@@ -1,6 +1,8 @@
+<script context="module">
+	import { surveys } from "../stores/store";
+</script>
 <script>
 	import { getRelativeTimeString } from "../lib/time";
-	import { surveys } from "../stores/store";
    import Copy from "./Copy.svelte";
 	import Show from "./Show.svelte";
 	let err;
@@ -32,7 +34,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each $surveys as survey}
+			{#each $surveys as survey (survey.signature)}
 				<tr>
 					<td><Copy value={survey.signature} /></td>
 					<td><Copy value={survey.symbol} /></td>

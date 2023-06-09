@@ -1,8 +1,8 @@
+<script context="module">
+	import { token, agent, systems, lastSystems, contracts, ships } from "../stores/store";
+	import { IHashAdd } from "../stores/utils";
+</script>
 <script>
-	import { token, agent, systems, lastSystems } from "../stores/store";
-	import { ships } from "../stores/ships";
-	import { contracts } from "../stores/contracts";
-	
 	import { listShips, listContracts, myAgentDetails, listSystems } from "../lib/api";
 	
 	const listAllShips = async () => {
@@ -12,9 +12,12 @@
 				page++;
 				const done = await listShips({ token:$token, page, limit });
 				if (done?.body?.data) Ships.push(...done?.body?.data);
+				console.log("Here");
 				total = done?.body?.meta?.total 
 			} while (total > limit*page);
-			$ships = Ships;			
+			console.log("There");
+			$ships = IHashAdd($ships, Ships);
+			console.log("Done");
 		} catch (error) {
 			throw error;
 		}

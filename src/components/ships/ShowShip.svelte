@@ -1,21 +1,22 @@
+<script context="module">
+	import { token, ships } from "../../stores/store";
+	import { IHashAdd } from "../../stores/utils";
+</script>
+
 <script>
-  import HullShip from './HullShip.svelte';
-
-	import ContractShips from './ContractShips.svelte';
-	import MainShip from './MainShip.svelte';
-	import Market from '../systems/Market.svelte';
-	import PanelTabItem from '../PanelTabItem.svelte';
-	import Show from '../Show.svelte';
-
-	import { token } from "../../stores/store";
-	import { ships, shipsSet } from "../../stores/ships";
+	import ContractShips from "./ContractShips.svelte";
+	import HullShip from "./HullShip.svelte";
+	import MainShip from "./MainShip.svelte";
+	import Market from "../systems/Market.svelte";
+	import PanelTabItem from "../PanelTabItem.svelte";
+	import Show from "../Show.svelte";
 
 	import { getShip } from "../../lib/api";
 
 	export let symbol;
 	let ship;
 	let err;
-	let subMenu = 'Main';
+	let subMenu = "Main";
 
 	const onShip = async () => {
 		try {
@@ -23,20 +24,22 @@
 				shipSymbol: symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, done?.body?.data, true);
+			$ships = IHashAdd($ships, [done?.body?.data]);
 		} catch (error) {
 			err = error?.response?.body;
 		}
 	};
 
-	const onClick = (s) => { subMenu = s; }
+	const onClick = (s) => {
+		subMenu = s;
+	};
 
-	$: ship = $ships.find((current) => current.symbol === symbol);
-
+	$: ship = $ships?.[symbol];
 </script>
 
 <div class="panel-heading">
-	{symbol} <span class="is-italic is-size-7">{ship.registration.role}</span>&nbsp;
+	{symbol}
+	<span class="is-italic is-size-7">{ship.registration.role}</span>&nbsp;
 	<button class="button is-small is-rounded" on:click={onShip}>
 		<span class="icon is-small">
 			<i class="fa-solid fa-refresh" />
@@ -52,7 +55,7 @@
 </p>
 
 <div class:is-hidden={subMenu !== "Main"}>
-	<MainShip {symbol}/>
+	<MainShip {symbol} />
 </div>
 
 <div class:is-hidden={subMenu !== "Hull"}>

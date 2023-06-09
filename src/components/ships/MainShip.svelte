@@ -1,30 +1,43 @@
+<script context="module">
+	import {
+		agent,
+		contracts,
+		keepers,
+		page,
+		ships,
+		surveys,
+		token,
+		waypoints,
+	} from "../../stores/store";
+	import {
+		IArrayReplace,
+		IHashAdd,
+		IHashPatch,
+		IObjectPatch,
+	} from "../../stores/utils";
+</script>
 <script>
 	import Copy from "../Copy.svelte";
 	import Show from "../Show.svelte";
 
 	import {
-		orbitShip,
+		createSurvey,
+		deliverContract,
 		dockShip,
 		extractResources,
-		sellCargo,
-		patchShipNav,
-		navigateShip,
-		transferCargo,
-		getShipCargo,
-		deliverContract,
-		getShip,
-		createSurvey,
-		refuelShip,
-		purchaseCargo,
-		listWaypoints,
 		getMarket,
+		getShip,
+		getShipCargo,
+		jumpShip,
+		listWaypoints,
+		navigateShip,
+		orbitShip,
+		patchShipNav,
+		purchaseCargo,
+		refuelShip,
+		sellCargo,
+		transferCargo,
 	} from "../../lib/api";
-
-	import { token, agent, keepers, surveys } from "../../stores/store";
-	import { ships, shipsSet } from "../../stores/ships";
-	import { contracts, contractsSet } from "../../stores/contracts";
-	import { page, pageSet } from "../../stores/page";
-	import { waypoints, waypointsMod, waypointsSet } from "../../stores/waypoints";
 
 	export let symbol;
 
@@ -35,6 +48,8 @@
 	let selXfr;
 	let iDest;
 	let hideDest = true;
+	let iJump;
+	let hideJump = true;
 	let iCtx;
 	let hideCtx = true;
 	let Cooldown;
@@ -42,7 +57,7 @@
 	let showCargo = false;
 
 	const onWaypoint = ({ systemSymbol, waypointSymbol }) => {
-		$page = pageSet($page, {
+		$page = IObjectPatch($page, {
 			selected: "Waypoint",
 			back: "Ships",
 			waypointData: { systemSymbol, waypointSymbol }
@@ -82,7 +97,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { nav: done?.body?.data?.nav });
+			$ships = IHashPatch($ships, symbol, { nav: done?.body?.data?.nav });
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -93,7 +108,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { nav: done?.body?.data?.nav });
+			$ships = IHashPatch($ships, symbol, { nav: done?.body?.data?.nav });
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -104,7 +119,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { cargo: done?.body?.data });
+			$ships = IHashPatch($ships, symbol, { cargo: done?.body?.data });
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -115,7 +130,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, done?.body?.data, true);
+			$ships = IHashAdd($ships, [done?.body?.data]);
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -127,7 +142,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { cargo: done?.body?.data?.cargo });
+			$ships = IHashPatch($ships, symbol, { cargo: done?.body?.data?.cargo });
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
 		} catch (error) {
 			err = error?.response?.body;
@@ -139,7 +154,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { fuel: done?.body?.data?.fuel });
+			$ships = IHashPatch($ships, symbol, { fuel: done?.body?.data?.fuel });
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
 		} catch (error) {
 			err = error?.response?.body;
@@ -152,7 +167,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { cargo: done?.body?.data?.cargo });
+			$ships = IHashPatch($ships, symbol, { cargo: done?.body?.data?.cargo });
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -164,7 +179,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { nav: done?.body?.data });
+			$ships = IHashPatch($ships, symbol, { nav: done?.body?.data });
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -184,11 +199,21 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { cargo: done?.body?.data?.cargo });
+			$ships = IHashPatch($ships, symbol, { cargo: done?.body?.data?.cargo });
 			setCooldown(done?.body?.data?.cooldown);
 		} catch (error) {
-			err = error?.response?.body;
-			setCooldown(error?.response?.body?.error?.data?.cooldown);
+			if (error?.response?.body?.error?.code === 4224) {
+				iCtx = undefined;
+				const Bad = /\s([A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+)\s/.exec(error?.response?.body?.error?.message);
+				console.log(Bad);
+				if (Bad) {
+					$surveys = $surveys.filter((s) => s.signature !== Bad[1]);
+				}
+				await onExtract();
+			} else {
+				err = error?.response?.body;
+				setCooldown(error?.response?.body?.error?.data?.cooldown);
+			}
 		}
 	};
 
@@ -212,6 +237,22 @@
 		}
 	};
 
+	const onJump = async ({systemSymbol}) => {
+		try {
+			const done = await jumpShip({
+				systemSymbol,
+				shipSymbol: ship.symbol,
+				token: $token,
+			});
+			$ships = IHashPatch($ships, symbol, {
+				nav: done?.body?.data?.nav,
+			});
+			setCooldown(done?.body?.data?.cooldown);
+		} catch (error) {
+			err = error?.response?.body;
+		}
+	};
+
 	const onNavigate = async ({waypointSymbol, avoidUpdate=false}) => {
 		try {
 			const done = await navigateShip({
@@ -219,7 +260,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, {
+			$ships = IHashPatch($ships, symbol, {
 				fuel: done?.body?.data?.fuel,
 				nav: done?.body?.data?.nav,
 			});
@@ -238,13 +279,8 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, symbol, { cargo: done?.body?.data?.cargo });
-			$contracts = contractsSet(
-				$contracts,
-				data.contractId,
-				done?.body?.data?.contract,
-				true
-			);
+			$ships = IHashPatch($ships, symbol, { cargo: done?.body?.data?.cargo });
+			$contracts = IArrayReplace($contracts, data.contractId, done?.body?.data?.contract, "id");
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -256,7 +292,7 @@
 				shipSymbol: ship.symbol,
 				token: $token,
 			});
-			$ships = shipsSet($ships, ship.symbol, { cargo: done?.body?.data?.cargo });
+			$ships = IHashPatch($ships, ship.symbol, { cargo: done?.body?.data?.cargo });
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
 		} catch (error) {
 			err = error?.response?.body;
@@ -269,7 +305,7 @@
 				limit: 20,
 				token: $token,
 			});
-			$waypoints = waypointsSet($waypoints, done?.body?.data);
+			$waypoints = IHashAdd($waypoints, done?.body?.data);
 		} catch (error) {
 			err = error?.response?.body;
 		}
@@ -281,7 +317,7 @@
 				waypointSymbol,
 				token: $token,
 			});
-			$waypoints = waypointsMod($waypoints, waypointSymbol, {
+			$waypoints = IHashPatch($waypoints, waypointSymbol, {
 				market: done?.body?.data,
 			});
 		} catch (error) {
@@ -371,30 +407,38 @@
 		}
 	}
 
+	const arrayRotate = (arr, count) => {
+		const len = arr.length;
+		arr.push(...arr.splice(0, (-count % len + len) % len));
+		return arr;
+	}
+		
 	const onUpdateMarkets = async () => {
 		try {
-			await onWPSystems({
-				token:$token,
-				systemSymbol: ship.nav.systemSymbol,
-				page: 1,
-				limit: 20
-			});
-			const Markets = Object.values($waypoints).filter((wp)=> wp.systemSymbol === ship.nav.systemSymbol  && wp.traits.map(t=>t.symbol).includes("MARKETPLACE"));
+			const Check = (el) => {if (mission!="UpdateMarkets" || el != err) throw "Done" };
+			let Markets = Object.values($waypoints).filter((wp)=> wp.systemSymbol === ship.nav.systemSymbol  && wp.traits.map(t=>t.symbol).includes("MARKETPLACE"));
+			if (Markets.length < 2) throw "Scan system";
+			const pos = Markets.findIndex(m=>m.symbol === ship.nav.waypointSymbol);
+			if (pos > 0) {
+				Markets = arrayRotate(Markets, Markets.length - pos);
+			}
 			while (true) {
 				const Prev = err;
 				for (const Market of Markets) {
-					await onNavigate({
-						waypointSymbol: Market.symbol,
-						avoidUpdate: true
-					});
-					if (mission!="UpdateMarkets" || Prev != err) break;
-					await sleep(Coolmove.remainingSeconds);
-					if (mission!="UpdateMarkets" || Prev != err) break;
+					if (Market.symbol !== ship.nav.waypointSymbol) {
+						await onNavigate({
+							waypointSymbol: Market.symbol,
+							avoidUpdate: true
+						});
+						Check(Prev);
+						await sleep(Coolmove.remainingSeconds);
+						Check(Prev);
+					}
 					await onMarket({
 						waypointSymbol: ship.nav.waypointSymbol,
 						systemSymbol: ship.nav.systemSymbol
 					});
-					if (mission!="UpdateMarkets" || Prev != err) break;					
+					Check(Prev);
 				}
 			}
 		} catch (error) {
@@ -433,12 +477,12 @@
 		}
 	};
 
-	$: ship = $ships.find((current) => current.symbol === symbol);
+	$: ship = $ships?.[symbol];
 	$: majTime(tick);
 	$: inCoolDown =
 		Cooldown?.remainingSeconds !== 0 &&
 		Cooldown?.remainingSeconds !== undefined;
-	$: near = $ships.filter(
+	$: near = Object.values($ships).filter(
 		(v) =>
 			v.symbol !== ship.symbol &&
 			v.nav.waypointSymbol === ship.nav.waypointSymbol &&
@@ -545,99 +589,144 @@
 {/if}
 
 <div class="panel-block">
-	Position :&nbsp;{#if ship.nav.status === "IN_TRANSIT"}
-		<button
-			class="button is-small is-rounded"
-			on:click={() => {
-				onWaypoint({
-					systemSymbol: ship.nav.route.departure.systemSymbol,
-					waypointSymbol: ship.nav.route.departure.symbol,
-				});
-			}}
-		>
-			<span class="icon is-small">
-				<i class="fa-solid fa-eye" />
-			</span>
-		</button>
-		<Copy value={ship.nav.route.departure.symbol} />
-		&nbsp;
-		<span class="icon is-small">
-			<i class="fa-solid fa-shuttle-space" />
-		</span>
-		&nbsp;
-		<Copy value={ship.nav.route.destination.symbol} />
-		<button
-			class="button is-small is-rounded"
-			on:click={() => {
-				onWaypoint({
-					systemSymbol: ship.nav.route.destination.systemSymbol,
-					waypointSymbol: ship.nav.route.destination.symbol,
-				});
-			}}
-		>
-			<span class="icon is-small">
-				<i class="fa-solid fa-eye" />
-			</span>
-		</button>
-	{:else}
-		<button
-			class="button is-small is-rounded"
-			on:click={() => {
-				onWaypoint({
-					systemSymbol: ship.nav.systemSymbol,
-					waypointSymbol: ship.nav.waypointSymbol,
-				});
-			}}
-		>
-			<span class="icon is-small">
-				<i class="fa-solid fa-eye" />
-			</span>
-		</button>
-		<Copy value={ship.nav.waypointSymbol} /> &nbsp;
-		<div class="buttons has-addons">
-			{#if !hideDest}
-				<select
-					class="button is-small is-rounded is-link"
-					bind:value={selFM}
-					on:change={() => onSetNav({ flightMode: selFM })}
-				>
-					{#each ["DRIFT", "STEALTH", "CRUISE", "BURN"] as flightMode}
-						<option
-							value={flightMode}
-							selected={flightMode === ship.nav.flightMode}
+	<table class="table is-narrow">
+		<tbody>
+			<tr>
+				<td>Position :</td>
+				{#if ship.nav.status === "IN_TRANSIT"}
+				<td>
+					<button
+						class="button is-small is-rounded"
+						on:click={() => {
+							onWaypoint({
+								systemSymbol: ship.nav.route.departure.systemSymbol,
+								waypointSymbol: ship.nav.route.departure.symbol,
+							});
+						}}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-eye" />
+						</span>
+					</button>
+					<Copy value={ship.nav.route.departure.symbol} />
+					&nbsp;
+					<span class="icon is-small">
+						<i class="fa-solid fa-shuttle-space" />
+					</span>
+					&nbsp;
+					<Copy value={ship.nav.route.destination.symbol} />
+					<button
+						class="button is-small is-rounded"
+						on:click={() => {
+							onWaypoint({
+								systemSymbol: ship.nav.route.destination.systemSymbol,
+								waypointSymbol: ship.nav.route.destination.symbol,
+							});
+						}}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-eye" />
+						</span>
+					</button>
+				</td>
+			
+				{:else}
+				<td>
+					<button
+						class="button is-small is-rounded"
+						on:click={() => {
+							onWaypoint({
+								systemSymbol: ship.nav.systemSymbol,
+								waypointSymbol: ship.nav.waypointSymbol,
+							});
+						}}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-eye" />
+						</span>
+					</button>
+					<Copy value={ship.nav.waypointSymbol} />
+				</td>
+				<td>
+					<div class="buttons has-addons">
+						{#if !hideDest}
+							<select
+								class="button is-small is-rounded is-link"
+								bind:value={selFM}
+								on:change={() => onSetNav({ flightMode: selFM })}
+							>
+								{#each ["DRIFT", "STEALTH", "CRUISE", "BURN"] as flightMode}
+									<option
+										value={flightMode}
+										selected={flightMode === ship.nav.flightMode}
+									>
+										{flightMode}
+									</option>
+								{/each}</select
+							>
+							<input
+								class="button is-small is-rounded"
+								type="text"
+								placeholder="waypoint"
+								bind:value={iDest}
+							/>{/if}
+						<button
+							class="button is-small is-rounded is-warning"
+							on:click={() => {
+								if (hideDest) {
+									iDest = undefined;
+									hideDest = false;
+								} else {
+									hideDest = true;
+									if (iDest) onNavigate({ waypointSymbol: iDest });
+									iDest = undefined;
+								}
+							}}
 						>
-							{flightMode}
-						</option>
-					{/each}</select
-				>
-				<input
-					class="button is-small is-rounded"
-					type="text"
-					placeholder="waypoint"
-					bind:value={iDest}
-				/>{/if}
-			<button
-				class="button is-small is-rounded is-warning"
-				on:click={() => {
-					if (hideDest) {
-						iDest = undefined;
-						hideDest = false;
-					} else {
-						hideDest = true;
-						if (iDest) onNavigate({ waypointSymbol: iDest });
-						iDest = undefined;
-					}
-				}}
-			>
-				<span class="icon is-small">
-					<i
-						class="fa-solid fa-rocket"
-						class:fa-beat-fade={iDest}
-					/>
-				</span>
-			</button>
-		</div>
-	{/if}
+							<span class="icon is-small">
+								<i
+									class="fa-solid fa-rocket"
+									class:fa-beat-fade={iDest}
+								/>
+							</span>
+						</button>
+					</div>
+				</td>
+				<td>
+					<div class="buttons has-addons">
+						{#if !hideJump}
+							<input
+								class="button is-small is-rounded"
+								type="text"
+								placeholder="system"
+								bind:value={iJump}
+							/>{/if}
+						<button
+							class="button is-small is-rounded is-warning"
+							on:click={() => {
+								if (hideJump) {
+									iJump = undefined;
+									hideJump = false;
+								} else {
+									hideJump = true;
+									if (iJump) onJump({ systemSymbol: iJump });
+									iJump = undefined;
+								}
+							}}
+						>
+							<span class="icon is-small">
+								<i
+									class="fa-solid fa-elevator"
+									class:fa-beat-fade={iJump}
+								/>
+							</span>
+						</button>
+					</div>
+				</td>
+				{/if}
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 {#if ship.fuel.capacity > 0}
@@ -768,7 +857,7 @@
 					class="button is-small is-rounded"
 					bind:value={selXfr}
 				>
-					{#each near as other}
+					{#each near as other (other.symbol)}
 						<option value={other.symbol}>
 							{other.symbol}
 						</option>

@@ -1,11 +1,12 @@
+<script context="module">
+	import { token, agent, ships, waypoints } from "../../stores/store";
+	import { IHashAdd, IHashPatch } from '../../stores/utils';
+</script>
+
 <script>
   import BuySell from './BuySell.svelte';
 
 	import { getShipyard, purchaseShip } from "../../lib/api";
-
-	import { ships, shipsAdd } from "../../stores/ships";
-	import { token, agent } from "../../stores/store";
-	import { waypoints, waypointsMod } from "../../stores/waypoints";
 
 	export let systemSymbol;
 	export let waypointSymbol;
@@ -22,7 +23,7 @@
 				...data,
 				token: $token,
 			});
-			$waypoints = waypointsMod($waypoints, waypointSymbol, {
+			$waypoints = IHashPatch($waypoints, waypointSymbol, {
 				shipyard: done?.body?.data,
 			});
 		} catch (error) {
@@ -37,28 +38,12 @@
 				waypointSymbol:waypointSymbol,
 				token: $token
 			})
-			$ships = shipsAdd($ships, done?.body?.data?.ship);
+			$ships = IHashAdd($ships, [done?.body?.data?.ship]);
 			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;			
 		} catch (error) {
 			err = error?.response?.body;			
 		}
-
 	}
-	/*
-	const onBuy = async (data) => {
-		try {
-			const done = await purchaseCargo({
-				...data,
-				shipSymbol: Ship.symbol,
-				token: $token,
-			});
-			$ships = shipsSet($ships, Ship.symbol, { cargo: done?.body?.data?.cargo });
-			if (done?.body?.data?.agent) $agent = done?.body?.data?.agent;
-		} catch (error) {
-			err = error?.response?.body;
-		}
-	};
-*/
 
 	$: Waypoint = $waypoints?.[waypointSymbol];
 	$: Shipyard = Waypoint?.shipyard;
