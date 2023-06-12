@@ -9,7 +9,7 @@
 	export let showRange = true;
 </script>
 
-<div class="buttons has-addons">
+<div class="buttons has-addons NoBr">
 	<button
 		class="button is-small is-rounded"
 		class:is-success={type === "Sell"}
@@ -23,11 +23,23 @@
 	</button>
 	{#if showRange}
 		<input
-			class="button is-small is-rounded"
+			class="button is-small is-rounded Short"
 			type="number"
 			min="0"
+			title={value}
 			{max}
 			bind:value={value}
 		/>
 	{/if}
 </div>
+
+<style>
+	.NoBr {
+		white-space: nowrap;
+		page-break-inside: avoid;
+		break-inside: avoid;
+	}
+	.Short {
+		width: 5em;
+	}
+</style>

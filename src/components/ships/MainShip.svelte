@@ -6,6 +6,7 @@
 		page,
 		ships,
 		surveys,
+		systems,
 		token,
 		waypoints,
 	} from "../../stores/store";
@@ -50,11 +51,11 @@
 	let hideDest = true;
 	let iJump;
 	let hideJump = true;
-	let iCtx;
 	let hideCtx = true;
 	let Cooldown;
 	let Coolmove;
 	let showCargo = false;
+	let MyActions = [];
 
 	const onWaypoint = ({ systemSymbol, waypointSymbol }) => {
 		$page = IObjectPatch($page, {
@@ -74,7 +75,7 @@
 			const arrival = new Date(nv.arrival);
 			Coolmove = {
 				totalSeconds: timeDiff(departure, arrival),
-				remainingSeconds: timeDiff(Now, arrival) + 1,
+				remainingSeconds: Math.max(0, timeDiff(Now, arrival) + 1),
 			};
 		}
 	};
@@ -172,6 +173,20 @@
 			err = error?.response?.body;
 		}
 	};
+	const onTransfer = async ({shipSymbol, tradeSymbol, units, destShipSymbol}) => {
+		try {
+			const done = await transferCargo({
+				shipSymbol,
+				tradeSymbol,
+				units,
+				destShipSymbol,
+				token: $token,
+			});
+			$ships = IHashPatch($ships, shipSymbol, { cargo: done?.body?.data?.cargo });
+		} catch (error) {
+			err = error?.response?.body;
+		}
+	};
 	const onSetNav = async (data) => {
 		try {
 			const done = await patchShipNav({
@@ -188,11 +203,11 @@
 	const onExtract = async () => {
 		try {
 			let survey;
-			if (iCtx) {
+			if (Contexts.Survey) {
 				const Now = new Date().toJSON();
 				$surveys = $surveys.filter((s) => s.expiration > Now);
-				survey = $surveys.find((s) => s.signature === iCtx);
-				if (!survey) iCtx = undefined;
+				survey = $surveys.find((s) => s.signature === Contexts.Survey);
+				if (!survey) Contexts.Survey = "";
 			}
 			const done = await extractResources({
 				survey,
@@ -203,9 +218,8 @@
 			setCooldown(done?.body?.data?.cooldown);
 		} catch (error) {
 			if (error?.response?.body?.error?.code === 4224) {
-				iCtx = undefined;
+				Contexts.Survey = "";
 				const Bad = /\s([A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+)\s/.exec(error?.response?.body?.error?.message);
-				console.log(Bad);
 				if (Bad) {
 					$surveys = $surveys.filter((s) => s.signature !== Bad[1]);
 				}
@@ -326,31 +340,12 @@
 	};
 
 	const onAction = async () => {
-		switch (mission) {
-			case "Survey":
-			case "Survey_All":
-				await onSurvey();
-				break;
-			case "Extract_Once":
-			case "Extract_Max":
-				await onExtract();
-				break;
-			case "Extract_Sell":
-				await onExtractSell();
-				break;
-			case "AutoDeliver":
-				await onBuyMoveDeliverBack();
-				break;
-			case "UpdateMarkets":
-				await onUpdateMarkets();
-				break;
-			default:
-				break;
+		if (mission in Actions) {
+			await  Actions[mission].fn();
 		}
 	};
 
-	const onExtractSell = async () => {
-		await onExtract();
+	const onSellAll = async () => {
 		const toSell = ship.cargo.inventory.filter(
 			(i) => !$keepers.includes(i.symbol)
 		);
@@ -364,43 +359,256 @@
 			}
 			await onOrbit();
 		}
+	}
+
+	const onExtractSell = async () => {
+		await onExtract();
+		await onSellAll();
 	};
 
+
+	/*{
+		From: {
+			Where
+			What
+		}
+		To: {
+			Where
+		}
+
+	}*/
 	const sleep = s => new Promise(r => setTimeout(r, 1000*s));
 	const onBuyMoveDeliverBack = async () => {
+		const Check = (el) => {if (mission!="AutoDeliver" || el != err) throw "Done" };
 		try {
-			let Context = JSON.parse(iCtx);
+			let Context = JSON.parse(Contexts[Actions[mission].Ctx]);
 			while (true) {
 				const Prev = err;
 				await onDock();
-				if (mission!="AutoDeliver" || Prev != err) break;
+				Check(Prev);
 				await onBuy({
 					units: ship.cargo.capacity - ship.cargo.units,
 					symbol: Context?.From?.What
 				});
-				if (mission!="AutoDeliver" || Prev != err) break;
-				await onNavigate({
+				Check(Prev);
+				await onGateTo({
 					waypointSymbol: Context?.To?.Where,
 					avoidUpdate: true
 				});
-				if (mission!="AutoDeliver" || Prev != err) break;
-				await sleep(Coolmove.remainingSeconds);
-				if (mission!="AutoDeliver" || Prev != err) break;
+				Check(Prev);
+				await endOfTransit();
+				Check(Prev);
 				await onDock();
-				if (mission!="AutoDeliver" || Prev != err) break;
+				Check(Prev);
 				await onDeliver({
 					tradeSymbol: Context?.From?.What,
 					units: ship.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units,
 					contractId: $contracts.find((v) => v.terms.deliver.some((d) => d.destinationSymbol === ship.nav.waypointSymbol && d.tradeSymbol === Context?.From?.What) && v.accepted && !v.fulfilled).id,
 				});
-				if (mission!="AutoDeliver" || Prev != err) break;
-				await onNavigate({
+				Check(Prev);
+				await onGateTo({
 					waypointSymbol: Context?.From?.Where,
 					avoidUpdate: true
 				});
-				if (mission!="AutoDeliver" || Prev != err) break;
-				await sleep(Coolmove.remainingSeconds);
-				if (mission!="AutoDeliver" || Prev != err) break;
+				Check(Prev);
+				await endOfTransit();
+				Check(Prev);
+			}
+		} catch (error) {
+			err = error;
+		}
+	}
+
+	/*{
+		From: {
+			Where
+			What
+			OnWait?
+		}
+		To: {
+			Where
+			Max
+			Refuel?
+		}
+	}*/
+	const onAutoSellAway = async () => {
+		const Check = (el) => {if (mission!="SellAway" || el != err) {console.log(err); throw "Done";} };
+		try {
+			let Context = JSON.parse(Contexts[Actions[mission].Ctx]);
+			while (true) {
+				const Prev = err;
+				//On retourne au (DEPART)
+				await onGateTo({
+					waypointSymbol: Context?.From?.Where,
+					avoidUpdate: true
+				});
+				Check(Prev);
+				await endOfTransit();
+				await onShip();
+				Check(Prev);
+				//On remplit (QUOI)
+				let Dispo = ship.cargo.capacity - ship.cargo.units;
+				do {
+					const [...GetFrom] = near.filter(s=>s.cargo.inventory.find(i=>i.symbol===Context?.From?.What));
+					if (GetFrom.length>0) {
+						const [Best] = GetFrom.sort((b,a) => a.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units - b.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units);
+						const canX = Math.min(Dispo, Best.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units);
+						await onTransfer({
+							shipSymbol: Best.symbol,
+							tradeSymbol: Context?.From?.What,
+							units: canX,
+							destShipSymbol: ship.symbol
+						});
+						Dispo = Dispo - canX;
+						Check(Prev);
+						await sleep(1)
+					} else {
+						await onCargo();
+						switch (Context?.From?.OnWait) {
+							case "ExtractSell":
+								if (ship.cargo.units < ship.cargo.capacity) {
+									await onExtract();
+									await onSellAll();
+									await endOfCooldown();
+								} else {
+									await onSellAll();
+									await sleep(30);
+								}
+								break;
+						
+							default:
+								await sleep(30);
+								break;
+						}
+						// if (Context?.From?.What === )
+						await onCargo();
+						Check(Prev);
+					}
+				} while (Dispo>0);
+				await onCargo();
+				Check(Prev);
+				//On va au (POINT DE VENTE)
+				await onGateTo({
+					waypointSymbol: Context?.To?.Where,
+					avoidUpdate: true
+				});
+				Check(Prev);
+				await endOfTransit();
+				Check(Prev);
+				//On se dock
+				await onDock();
+				Check(Prev);
+				//On vend (QUOI) par paquet de (COMBIEN)
+				let HowMany = ship.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units;
+				do {
+					const canSell = Math.min(HowMany, Context?.To?.Max);
+					await onSell({
+						symbol: Context?.From?.What,
+						units: canSell,
+					});
+					HowMany = HowMany - canSell;
+				} while (HowMany>0);
+				//On (REFUEL) ou pas
+				if (Context?.To?.Max) {
+					await onFuel();
+					Check(Prev);
+				}
+			}
+		} catch (error) {
+			err = error;
+		}
+	}
+
+	/*{
+		From: {
+			Where
+			What
+			OnWait?
+		}
+		To: {
+			Where
+			Max
+			Refuel?
+		}
+	}*/
+	const onAutoDeliverAway = async () => {
+		const Check = (el) => {if (mission!="DeliverAway" || el != err) {console.log(err); throw "Done" }};
+		try {
+			let Context = JSON.parse(Contexts[Actions[mission].Ctx]);
+			while (true) {
+				const Prev = err;
+				//On retourne au (DEPART)
+				await onGateTo({
+					waypointSymbol: Context?.From?.Where,
+					avoidUpdate: true
+				});
+				Check(Prev);
+				await endOfTransit();
+				await onShip();
+				Check(Prev);
+				//On remplit (QUOI)
+				let Dispo = ship.cargo.capacity - ship.cargo.units;
+				do {
+					const [...GetFrom] = near.filter(s=>s.cargo.inventory.find(i=>i.symbol===Context?.From?.What));
+					if (GetFrom.length>0) {
+						const [Best] = GetFrom.sort((b,a) => a.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units - b.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units);
+						const canX = Math.min(Dispo, Best.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units);
+						await onTransfer({
+							shipSymbol: Best.symbol,
+							tradeSymbol: Context?.From?.What,
+							units: canX,
+							destShipSymbol: ship.symbol
+						});
+						Dispo = Dispo - canX;
+						Check(Prev);
+						await sleep(1)
+					} else {
+						await onCargo();
+						switch (Context?.From?.OnWait) {
+							case "ExtractSell":
+								if (ship.cargo.units < ship.cargo.capacity) {
+									await onExtract();
+									await onSellAll();
+									await endOfCooldown();
+								} else {
+									await onSellAll();
+									await sleep(30);
+								}
+								break;
+						
+							default:
+								await sleep(30);
+								break;
+						}
+						// if (Context?.From?.What === )
+						await onCargo();
+						Check(Prev);
+					}
+				} while (Dispo>0);
+				await onCargo();
+				Check(Prev);
+				//On va au (POINT DE VENTE)
+				await onGateTo({
+					waypointSymbol: Context?.To?.Where,
+					avoidUpdate: true
+				});
+				Check(Prev);
+				await endOfTransit();
+				Check(Prev);
+				//On se dock
+				await onDock();
+				Check(Prev);
+				//On deliver (QUOI)
+				await onDeliver({
+					tradeSymbol: Context?.From?.What,
+					units: ship.cargo.inventory.find(i=>i.symbol===Context?.From?.What).units,
+					contractId: $contracts.find((v) => v.terms.deliver.some((d) => d.destinationSymbol === ship.nav.waypointSymbol && d.tradeSymbol === Context?.From?.What) && v.accepted && !v.fulfilled).id,
+				});
+				//On (REFUEL) ou pas
+				if (Context?.To?.Max) {
+					await onFuel();
+					Check(Prev);
+				}
 			}
 		} catch (error) {
 			err = error;
@@ -411,6 +619,38 @@
 		const len = arr.length;
 		arr.push(...arr.splice(0, (-count % len + len) % len));
 		return arr;
+	}
+
+	const fWP2Sys = (wp) => {
+		const [first, second] = wp.split("-");
+		return `${first}-${second}`;
+	}
+
+	const endOfTransit = () => sleep((Coolmove?.remainingSeconds > 0) ? Coolmove.remainingSeconds : 0);
+	const endOfCooldown = () => sleep((Cooldown?.remainingSeconds > 0) ? Cooldown.remainingSeconds : 0);
+
+	const onGateTo = async ({waypointSymbol, avoidUpdate=false}) => {
+		let Gate;
+		const Check = (el) => {if (el != err) throw "Done" };
+		if (waypointSymbol === ship.nav.waypointSymbol) return;
+		if (waypointSymbol.startsWith(ship.nav.systemSymbol)) {
+			if (ship.nav.status !== "IN_ORBIT") onOrbit();
+			return onNavigate({waypointSymbol, avoidUpdate});
+		}
+		if (Gate = $systems?.[ship.nav.systemSymbol].waypoints.find(w=>w.type==="JUMP_GATE")) {
+			const Prev = err;
+			if (ship.nav.status !== "IN_ORBIT") onOrbit();
+			Check(Prev);
+			await onNavigate({waypointSymbol: Gate.symbol, avoidUpdate: true});
+			Check(Prev);
+			await endOfTransit();
+			Check(Prev);
+			await onJump({ systemSymbol: fWP2Sys(waypointSymbol) })
+			Check(Prev);
+			return onNavigate({waypointSymbol, avoidUpdate});
+		} else {
+			return onNavigate({waypointSymbol, avoidUpdate});
+		}
 	}
 		
 	const onUpdateMarkets = async () => {
@@ -426,12 +666,12 @@
 				const Prev = err;
 				for (const Market of Markets) {
 					if (Market.symbol !== ship.nav.waypointSymbol) {
-						await onNavigate({
+						await onGateTo({
 							waypointSymbol: Market.symbol,
 							avoidUpdate: true
 						});
 						Check(Prev);
-						await sleep(Coolmove.remainingSeconds);
+						await endOfTransit();
 						Check(Prev);
 					}
 					await onMarket({
@@ -477,6 +717,57 @@
 		}
 	};
 
+	let Contexts = {
+		Survey: "",
+		SearchSurvey: "",
+		DeliverAway: "",
+		SellAway: "",
+		UpdateMarkets: ""
+	}
+
+	let Actions = {
+		Extract_Once: {
+			ok: (s) => s.mounts.some(m => m.symbol.startsWith("MOUNT_MINING_LASER")),
+			fn: onExtract,
+			Ctx: "Survey"
+		},
+		Extract_Max: {
+			ok: (s) => s.mounts.some(m => m.symbol.startsWith("MOUNT_MINING_LASER")),
+			fn: onExtract,
+			Ctx: "Survey"			
+		},
+		Extract_Sell: {
+			ok: (s) => s.mounts.some(m => m.symbol.startsWith("MOUNT_MINING_LASER")),
+			fn: onExtractSell,
+			Ctx: "Survey"
+		},
+		Survey: {
+			ok: (s) => s.mounts.some(m => m.symbol.startsWith("MOUNT_SURVEYOR")),
+			fn: onSurvey,
+			Ctx: "SearchSurvey"
+		},
+		Survey_All: {
+			ok: (s) => s.mounts.some(m => m.symbol.startsWith("MOUNT_SURVEYOR")),
+			fn: onSurvey,
+			Ctx: "SearchSurvey"
+		},
+		DeliverAway: {
+			ok: (s) => (s.cargo.capacity > 0),
+			fn: onAutoDeliverAway,
+			Ctx: "DeliverAway"
+		},
+		SellAway: {
+			ok: (s) => (s.cargo.capacity > 0),
+			fn: onAutoSellAway,
+			Ctx: "SellAway"
+		},
+		UpdateMarkets: {
+			ok: (s) => true,
+			fn: onUpdateMarkets,
+			Ctx: "UpdateMarkets"
+		}
+	};
+
 	$: ship = $ships?.[symbol];
 	$: majTime(tick);
 	$: inCoolDown =
@@ -488,6 +779,13 @@
 			v.nav.waypointSymbol === ship.nav.waypointSymbol &&
 			v.nav.status === ship.nav.status
 	);
+	$: {
+		MyActions = [];
+		for (const [ActionName, Action] of Object.entries(Actions)) 
+			if (Action.ok(ship)) 
+				MyActions.push(ActionName);
+	}
+	// MyActions = Actions.reduce((Res, action),{})
 </script>
 
 <div class="panel-block">
@@ -536,7 +834,7 @@
 	Actions : &nbsp;
 	<div class="buttons has-addons">
 		<select class="button is-small is-rounded" bind:value={mission}>
-			{#each ["Extract_Once", "Extract_Max", "Extract_Sell", "Survey", "Survey_All", "AutoDeliver", "UpdateMarkets"] as action}
+			{#each MyActions as action}
 				<option value={action}>
 					{action}
 				</option>
@@ -560,7 +858,7 @@
 		{#if !hideCtx}
 			<input
 				class="button is-small is-rounded"
-				bind:value={iCtx}
+				bind:value={Contexts[Actions[mission].Ctx]}
 				placeholder="Survey Signature"
 			/>
 		{/if}
@@ -678,7 +976,7 @@
 									hideDest = false;
 								} else {
 									hideDest = true;
-									if (iDest) onNavigate({ waypointSymbol: iDest });
+									if (iDest) onGateTo({ waypointSymbol: iDest });
 									iDest = undefined;
 								}
 							}}
@@ -709,7 +1007,7 @@
 									hideJump = false;
 								} else {
 									hideJump = true;
-									if (iJump) onJump({ systemSymbol: iJump });
+									if (iJump) onJump({ systemSymbol: fWP2Sys(iJump) });
 									iJump = undefined;
 								}
 							}}

@@ -56,7 +56,7 @@
 		} catch (error) {
 			err = error?.response?.body;
 		}
-	};
+	}
 
 	$: Waypoint = $waypoints?.[waypointSymbol];
 	$: Market = Waypoint?.market;
@@ -93,7 +93,7 @@
 	{#if Market}
 		{#if SortedGoods.length}
 			<div class="panel-block">
-				<table class="table">
+				<table class="table is-narrow">
 					<tbody>
 						{#each SortedGoods as {symbol, purchasePrice, sellPrice, tradeVolume}}
 						<tr>
@@ -126,7 +126,7 @@
 							{#if Ship && Ship.nav.status === "DOCKED"}
 								<td>
 									{#each Ship.cargo.inventory.filter(i=>i.symbol===symbol) as Cargo}
-										<BuySell type="Sell" max={Cargo.units} value={Cargo.units} on:click={(e)=> onSell({symbol, units:e.detail})}/>
+										<BuySell type="Sell" max={Math.min(Cargo.units,tradeVolume)} value={Math.min(Cargo.units,tradeVolume)} on:click={(e)=> onSell({symbol, units:e.detail})}/>
 									{/each}
 								</td>
 							{/if}
@@ -135,7 +135,7 @@
 									<span class="icon">
 										<i class="fa-solid fa-sign-in" />
 									</span>
-								{/if} &nbsp; {sellPrice}
+								{/if}&nbsp;{sellPrice}
 							</td>
 							<td>{tradeVolume}</td>
 							<td>
@@ -143,7 +143,7 @@
 									<span class="icon">
 										<i class="fa-solid fa-sign-out" />
 									</span>
-								{/if} &nbsp; {purchasePrice}
+								{/if}&nbsp;{purchasePrice}
 							</td>
 							{#if Ship && Ship.nav.status === "DOCKED"}
 								<td>
